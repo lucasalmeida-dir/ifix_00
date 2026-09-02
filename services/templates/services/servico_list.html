@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Serviços disponíveis{% endblock %}
+{% block content %}
+<h2 class="mb-4">Serviços disponíveis</h2>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        {{ form.q }}
+    </div>
+    <div class="col-md-4">
+        {{ form.categoria }}
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="mb-4">
+    <span class="text-muted me-2">Categorias:</span>
+    <a href="{% url 'services:servico_list' %}" class="badge text-bg-light text-decoration-none me-1">Todas</a>
+    {% for categoria in categorias %}
+        <a href="?categoria={{ categoria.pk }}" class="badge text-bg-light text-decoration-none me-1">{{ categoria.nome }}</a>
+    {% endfor %}
+</div>
+
+<div class="row g-4">
+    {% for servico in servicos %}
+        <div class="col-md-4">
+            <div class="card card-servico h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <span class="badge text-bg-info align-self-start mb-2">{{ servico.categoria.nome }}</span>
+                    <h5 class="card-title">{{ servico.nome }}</h5>
+                    <p class="card-text text-muted small">{{ servico.descricao|truncatewords:20 }}</p>
+                    <p class="mb-1"><strong>R$ {{ servico.preco }}</strong> &middot; {{ servico.duracao_minutos }} min</p>
+                    <p class="text-muted small mb-3">Profissional: {{ servico.profissional.get_full_name|default:servico.profissional.username }}</p>
+                    <a href="{% url 'services:servico_detail' servico.pk %}" class="btn btn-outline-primary mt-auto">Ver detalhes</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">Nenhum serviço encontrado.</p>
+    {% endfor %}
+</div>
+{% endblock %}

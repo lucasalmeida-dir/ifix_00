@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Minhas solicitações{% endblock %}
+{% block content %}
+<h2 class="mb-4">Minhas solicitações</h2>
+<div class="table-responsive">
+    <table class="table table-striped bg-white">
+        <thead>
+            <tr>
+                <th>Serviço</th>
+                <th>Profissional</th>
+                <th>Status</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in solicitacoes %}
+            <tr>
+                <td>{{ s.servico.nome }}</td>
+                <td>{{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}</td>
+                <td><span class="badge text-bg-secondary">{{ s.get_status_display }}</span></td>
+                <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-muted">Você ainda não solicitou nenhum serviço.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

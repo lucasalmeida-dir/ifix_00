@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-1">{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}</h2>
+        <p class="text-muted">Informe nome, descrição, preço e duração do serviço.</p>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field.errors }}
+                    <div>{{ field }}</div>
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-success w-100">Salvar serviço</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
