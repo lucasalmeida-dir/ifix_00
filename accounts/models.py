@@ -24,6 +24,8 @@ class Profile(models.Model):
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, verbose_name='Tipo de conta')
     telefone = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
     endereco = models.CharField(max_length=255, blank=True, verbose_name='Endereço')
+    numero = models.CharField(max_length=10, blank=True, verbose_name='Número')
+    complemento = models.CharField(max_length=100, blank=True, verbose_name='Complemento')
     especialidade = models.CharField(
         max_length=255, blank=True,
         verbose_name='Especialidade/Área de atuação',

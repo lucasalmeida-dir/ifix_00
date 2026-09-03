@@ -3,9 +3,20 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-7">
-        <span class="badge text-bg-info mb-2">{{ servico.categoria.nome }}</span>
+        <div class="service-category-rating mb-2">
+            <span class="badge text-bg-info">{{ servico.categoria.nome }}</span>
+        </div>
         <h2>{{ servico.nome }}</h2>
-        <p class="text-muted">Oferecido por {{ servico.profissional.get_full_name|default:servico.profissional.username }}</p>
+        <div class="professional-info mb-3">
+            <div class="professional-rating" aria-label="Avaliação do profissional">
+                {% if servico.total_avaliacoes %}
+                    <span class="rating-stars" aria-label="{{ servico.avaliacao_media|floatformat:1 }} de 5 estrelas">{{ servico.avaliacao_estrelas }}</span>
+                    <span class="rating-score">{{ servico.avaliacao_media|floatformat:1 }}/5 ({{ servico.total_avaliacoes }})</span>
+                {% else %}
+                    <span class="rating-score">Ainda sem avaliações</span>
+                {% endif %}
+            </div>
+        </div>
         <p>{{ servico.descricao }}</p>
         <div class="row mb-4">
             <div class="col-6">

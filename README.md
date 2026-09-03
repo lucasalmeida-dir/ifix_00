@@ -1,4 +1,4 @@
-# Homeservices — Django
+# IFIX — Django
 
 Projeto Django gerado a partir do diagrama de fluxo (Mermaid) com três grandes áreas:
 
@@ -13,11 +13,11 @@ Projeto Django gerado a partir do diagrama de fluxo (Mermaid) com três grandes 
 ## Estrutura
 
 ```
-homeservices/
+IFIX/
 ├── manage.py
 ├── requirements.txt
 ├── core_views.py          # view da página inicial (home)
-├── homeservices/           # configurações do projeto (settings, urls)
+├── IFIX/                   # configurações do projeto (settings, urls)
 ├── accounts/                # Autenticação + cadastro/edição de perfil
 │   ├── models.py            # Profile (tipo: usuário/profissional)
 │   ├── forms.py

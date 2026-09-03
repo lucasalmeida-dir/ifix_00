@@ -28,11 +28,23 @@
         <div class="col-md-4">
             <div class="card card-servico h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
-                    <span class="badge text-bg-info align-self-start mb-2">{{ servico.categoria.nome }}</span>
+                    <div class="service-category-rating mb-2">
+                        <span class="badge text-bg-info">{{ servico.categoria.nome }}</span>
+                    </div>
                     <h5 class="card-title">{{ servico.nome }}</h5>
+                    <div class="professional-info mb-3">
+                        <strong class="professional-name">{{ servico.profissional.username }}</strong>
+                        <div class="professional-rating" aria-label="Avaliação do profissional">
+                            {% if servico.total_avaliacoes %}
+                                <span class="rating-stars" aria-label="{{ servico.avaliacao_media|floatformat:1 }} de 5 estrelas">{{ servico.avaliacao_estrelas }}</span>
+                                <span class="rating-score">{{ servico.avaliacao_media|floatformat:1 }}/5 ({{ servico.total_avaliacoes }})</span>
+                            {% else %}
+                                <span class="rating-score">Ainda sem avaliações</span>
+                            {% endif %}
+                        </div>
+                    </div>
                     <p class="card-text text-muted small">{{ servico.descricao|truncatewords:20 }}</p>
                     <p class="mb-1"><strong>R$ {{ servico.preco }}</strong> &middot; {{ servico.duracao_minutos }} min</p>
-                    <p class="text-muted small mb-3">Profissional: {{ servico.profissional.get_full_name|default:servico.profissional.username }}</p>
                     <a href="{% url 'services:servico_detail' servico.pk %}" class="btn btn-outline-primary mt-auto">Ver detalhes</a>
                 </div>
             </div>

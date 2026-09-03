@@ -7,23 +7,51 @@
         <thead>
             <tr>
                 <th>Serviço</th>
-                <th>Usuário</th>
+                <th>Solicitante</th>
+                <th>Contato</th>
+                <th>Endereço</th>
                 <th>Mensagem</th>
                 <th>Status</th>
                 <th>Data</th>
+                <th>Ação</th>
             </tr>
         </thead>
         <tbody>
             {% for s in solicitacoes %}
             <tr>
                 <td>{{ s.servico.nome }}</td>
-                <td>{{ s.usuario.get_full_name|default:s.usuario.username }}</td>
+                <td>
+                    <strong>{{ s.usuario.get_full_name|default:s.usuario.username }}</strong>
+                    <br><small class="text-muted">{{ s.usuario.email|default:"E-mail não informado" }}</small>
+                </td>
+                <td>{{ s.usuario.profile.telefone|default:"Não informado" }}</td>
+                <td>{{ s.usuario.profile.endereco|default:"Não informado" }}</td>
                 <td class="small text-muted">{{ s.mensagem|default:"-"|truncatewords:15 }}</td>
                 <td><span class="badge text-bg-secondary">{{ s.get_status_display }}</span></td>
                 <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if s.status == 'pendente' %}
+                    <div class="d-flex gap-1">
+                        <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'aceitar' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm">Aceitar</button>
+                        </form>
+                        <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'recusar' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Recusar</button>
+                        </form>
+                    </div>
+                    {% else %}
+                        {% if s.status == 'confirmado' %}
+                        <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary btn-sm">Conversar</a>
+                        {% else %}
+                        <span class="text-muted">Finalizada</span>
+                        {% endif %}
+                    {% endif %}
+                    </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-muted">Nenhuma solicitação recebida ainda.</td></tr>
+            <tr><td colspan="8" class="text-muted">Nenhuma solicitação recebida ainda.</td></tr>
             {% endfor %}
         </tbody>
     </table>

@@ -1,11 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Avg, Count, Q
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 
 from accounts.decorators import professional_required, user_required
-from .forms import ServicoForm, SolicitarServicoForm, BuscaServicoForm
-from .models import Servico, CategoriaServico, SolicitacaoServico
+from .forms import ServicoForm, SolicitarServicoForm, BuscaServicoForm, MensagemSolicitacaoForm, AvaliacaoForm
+from .models import (
+    Servico,
+    CategoriaServico,
+    SolicitacaoServico,
+    MensagemSolicitacao,
+    Avaliacao,
+    estrelas_da_media,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -21,7 +29,10 @@ def servico_list(request):
     (alimentados por P9 - Serviço disponível para usuários).
     """
     form = BuscaServicoForm(request.GET or None)
-    servicos = Servico.objects.filter(disponivel=True).select_related('categoria', 'profissional')
+    servicos = Servico.objects.filter(disponivel=True).select_related('categoria', 'profissional').annotate(
+        avaliacao_media=Avg('profissional__avaliacoes_recebidas__estrelas'),
+        total_avaliacoes=Count('profissional__avaliacoes_recebidas', distinct=True),
+    )
 
     if form.is_valid():
         q = form.cleaned_data.get('q')
@@ -37,6 +48,9 @@ def servico_list(request):
         if categoria:
             servicos = servicos.filter(categoria=categoria)
 
+    for servico in servicos:
+        servico.avaliacao_estrelas = estrelas_da_media(servico.avaliacao_media)
+
     categorias = CategoriaServico.objects.all()
     return render(request, 'services/servico_list.html', {
         'servicos': servicos,
@@ -47,7 +61,15 @@ def servico_list(request):
 
 def servico_detail(request, pk):
     """U7 - Consultar preço e duração (+ botão para U8 Solicitar serviço)."""
-    servico = get_object_or_404(Servico, pk=pk, disponivel=True)
+    servico = get_object_or_404(
+        Servico.objects.select_related('categoria', 'profissional').annotate(
+            avaliacao_media=Avg('profissional__avaliacoes_recebidas__estrelas'),
+            total_avaliacoes=Count('profissional__avaliacoes_recebidas', distinct=True),
+        ),
+        pk=pk,
+        disponivel=True,
+    )
+    servico.avaliacao_estrelas = estrelas_da_media(servico.avaliacao_media)
     return render(request, 'services/servico_detail.html', {'servico': servico})
 
 
@@ -74,6 +96,19 @@ def minhas_solicitacoes(request):
     """Lista as solicitações feitas pelo usuário logado."""
     solicitacoes = SolicitacaoServico.objects.filter(usuario=request.user).select_related('servico')
     return render(request, 'services/minhas_solicitacoes.html', {'solicitacoes': solicitacoes})
+
+
+@login_required
+def mensagens(request):
+    solicitacoes = SolicitacaoServico.objects.filter(
+        Q(usuario=request.user) | Q(servico__profissional=request.user),
+        status__in=[SolicitacaoServico.STATUS_CONFIRMADO, SolicitacaoServico.STATUS_CONCLUIDO],
+    ).select_related('servico', 'usuario', 'servico__profissional').order_by('-criado_em')
+
+    ultima_solicitacao = solicitacoes.first()
+    if ultima_solicitacao:
+        return redirect('services:conversa_solicitacao', pk=ultima_solicitacao.pk)
+    return render(request, 'services/mensagens.html')
 
 
 # ---------------------------------------------------------------------------
@@ -132,5 +167,106 @@ def solicitacoes_recebidas(request):
     """Solicitações recebidas para os serviços do profissional logado."""
     solicitacoes = SolicitacaoServico.objects.filter(
         servico__profissional=request.user
-    ).select_related('servico', 'usuario')
+    ).select_related('servico', 'usuario', 'usuario__profile')
     return render(request, 'services/solicitacoes_recebidas.html', {'solicitacoes': solicitacoes})
+
+
+@professional_required
+@require_POST
+def atualizar_status_solicitacao(request, pk, acao):
+    solicitacao = get_object_or_404(
+        SolicitacaoServico.objects.select_related('servico'),
+        pk=pk,
+        servico__profissional=request.user,
+        status=SolicitacaoServico.STATUS_PENDENTE,
+    )
+
+    if acao == 'aceitar':
+        solicitacao.status = SolicitacaoServico.STATUS_CONFIRMADO
+        mensagem = 'Solicitação aceita com sucesso.'
+    elif acao == 'recusar':
+        solicitacao.status = SolicitacaoServico.STATUS_CANCELADO
+        mensagem = 'Solicitação recusada.'
+    else:
+        messages.error(request, 'Ação de solicitação inválida.')
+        return redirect('services:solicitacoes_recebidas')
+
+    solicitacao.save(update_fields=['status'])
+    messages.success(request, mensagem)
+    return redirect('services:solicitacoes_recebidas')
+
+
+@login_required
+def conversa_solicitacao(request, pk):
+    solicitacao = get_object_or_404(
+        SolicitacaoServico.objects.select_related('servico', 'usuario', 'servico__profissional'),
+        pk=pk,
+        status__in=[SolicitacaoServico.STATUS_CONFIRMADO, SolicitacaoServico.STATUS_CONCLUIDO],
+    )
+    if request.user not in (solicitacao.usuario, solicitacao.servico.profissional):
+        messages.error(request, 'Você não tem acesso a esta conversa.')
+        return redirect('home')
+
+    solicitacao.mensagens.filter(lida=False).exclude(autor=request.user).update(lida=True)
+    mensagens = solicitacao.mensagens.select_related('autor').all()
+    conversas = SolicitacaoServico.objects.filter(
+        Q(usuario=request.user) | Q(servico__profissional=request.user),
+        status__in=[SolicitacaoServico.STATUS_CONFIRMADO, SolicitacaoServico.STATUS_CONCLUIDO],
+    ).select_related('servico', 'usuario', 'servico__profissional').order_by('-criado_em')
+    avaliacao = getattr(solicitacao, 'avaliacao', None)
+    avaliacao_form = AvaliacaoForm(instance=avaliacao)
+    if request.method == 'POST' and solicitacao.status == SolicitacaoServico.STATUS_CONFIRMADO:
+        form = MensagemSolicitacaoForm(request.POST)
+        if form.is_valid():
+            mensagem = form.save(commit=False)
+            mensagem.solicitacao = solicitacao
+            mensagem.autor = request.user
+            mensagem.save()
+            return redirect('services:conversa_solicitacao', pk=solicitacao.pk)
+    else:
+        form = MensagemSolicitacaoForm()
+
+    return render(request, 'services/conversa_solicitacao.html', {
+        'solicitacao': solicitacao,
+        'mensagens': mensagens,
+        'conversas': conversas,
+        'form': form,
+        'avaliacao': avaliacao,
+        'avaliacao_form': avaliacao_form,
+    })
+
+
+@login_required
+@require_POST
+def concluir_solicitacao(request, pk):
+    solicitacao = get_object_or_404(
+        SolicitacaoServico,
+        pk=pk,
+        usuario=request.user,
+        status=SolicitacaoServico.STATUS_CONFIRMADO,
+    )
+    solicitacao.status = SolicitacaoServico.STATUS_CONCLUIDO
+    solicitacao.save(update_fields=['status'])
+    messages.success(request, 'Serviço concluído com sucesso.')
+    return redirect('services:conversa_solicitacao', pk=solicitacao.pk)
+
+
+@login_required
+@require_POST
+def avaliar_solicitacao(request, pk):
+    solicitacao = get_object_or_404(
+        SolicitacaoServico.objects.select_related('servico'),
+        pk=pk,
+        usuario=request.user,
+        status=SolicitacaoServico.STATUS_CONCLUIDO,
+    )
+    avaliacao = getattr(solicitacao, 'avaliacao', None)
+    form = AvaliacaoForm(request.POST, instance=avaliacao)
+    if form.is_valid():
+        avaliacao = form.save(commit=False)
+        avaliacao.solicitacao = solicitacao
+        avaliacao.usuario = request.user
+        avaliacao.profissional = solicitacao.servico.profissional
+        avaliacao.save()
+        messages.success(request, 'Avaliação registrada com sucesso.')
+    return redirect('services:conversa_solicitacao', pk=pk)

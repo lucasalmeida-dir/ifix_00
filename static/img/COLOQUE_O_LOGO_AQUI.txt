@@ -3,7 +3,7 @@ Coloque aqui o arquivo do logo com o nome exato:
     logo.png
 
 Caminho final esperado pelo template:
-    homeservices/static/img/logo.png
+    IFIX/static/img/logo.png
 
 Depois de colocar o arquivo, se o servidor (`python manage.py runserver`)
 já estiver rodando, pare com CTRL+C e rode novamente para o Django

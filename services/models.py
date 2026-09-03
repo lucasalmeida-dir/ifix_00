@@ -4,6 +4,13 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 
+def estrelas_da_media(media):
+    if media is None:
+        return ''
+    estrelas_preenchidas = min(5, max(0, int(float(media) + 0.5)))
+    return '★' * estrelas_preenchidas + '☆' * (5 - estrelas_preenchidas)
+
+
 class CategoriaServico(models.Model):
     """
     Categorias de serviço (O1 a O5 do diagrama):
@@ -104,3 +111,67 @@ class SolicitacaoServico(models.Model):
 
     def __str__(self):
         return f'Solicitação de {self.usuario.username} para {self.servico.nome}'
+
+
+class MensagemSolicitacao(models.Model):
+    solicitacao = models.ForeignKey(
+        SolicitacaoServico,
+        on_delete=models.CASCADE,
+        related_name='mensagens',
+    )
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='mensagens_solicitacao',
+    )
+    texto = models.TextField(verbose_name='Mensagem')
+    lida = models.BooleanField(default=False)
+    criada_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Mensagem da solicitação'
+        verbose_name_plural = 'Mensagens das solicitações'
+        ordering = ['criada_em']
+
+    def __str__(self):
+        return f'Mensagem de {self.autor.username} na solicitação {self.solicitacao_id}'
+
+
+class Avaliacao(models.Model):
+    ESTRELAS_CHOICES = [
+        (5, '★★★★★'),
+        (4, '★★★★☆'),
+        (3, '★★★☆☆'),
+        (2, '★★☆☆☆'),
+        (1, '★☆☆☆☆'),
+    ]
+
+    solicitacao = models.OneToOneField(
+        SolicitacaoServico,
+        on_delete=models.CASCADE,
+        related_name='avaliacao',
+    )
+    profissional = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='avaliacoes_recebidas',
+        limit_choices_to={'profile__tipo': 'profissional'},
+        verbose_name='Profissional avaliado',
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='avaliacoes_feitas',
+        verbose_name='Avaliado por',
+    )
+    estrelas = models.PositiveSmallIntegerField(choices=ESTRELAS_CHOICES)
+    comentario = models.TextField(blank=True, verbose_name='Comentário (opcional)')
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Avaliação'
+        verbose_name_plural = 'Avaliações'
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f'{self.profissional.username} - {self.estrelas}★'

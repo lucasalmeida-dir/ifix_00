@@ -1,5 +1,5 @@
 """
-Configurações do projeto Homeservices.
+Configurações do projeto IFIX.
 
 Estrutura baseada no diagrama:
 - Autenticação (login, logout, recuperação de senha)
@@ -40,7 +40,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'homeservices.urls'
+ROOT_URLCONF = 'IFIX.urls'
 
 TEMPLATES = [
     {
@@ -53,12 +53,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'services.context_processors.notificacoes_mensagens',
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'homeservices.wsgi.application'
+WSGI_APPLICATION = 'IFIX.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -92,4 +93,4 @@ LOGOUT_REDIRECT_URL = 'home'
 # E-mail: em modo de desenvolvimento, os e-mails (ex: recuperação de senha)
 # são exibidos no console em vez de enviados de verdade.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'naoresponda@homeservices.local'
+DEFAULT_FROM_EMAIL = 'naoresponda@ifix.local'

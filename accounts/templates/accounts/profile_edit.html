@@ -10,7 +10,7 @@
         <form method="post">
             {% csrf_token %}
             {% for field in form %}
-                <div class="mb-3">
+                <div class="mb-3{% if field.name == 'numero' or field.name == 'complemento' %} address-detail-field{% endif %}">
                     <label class="form-label">{{ field.label }}</label>
                     {{ field.errors }}
                     <div>{{ field }}</div>

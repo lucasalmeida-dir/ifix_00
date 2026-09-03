@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Conversa sobre {{ solicitacao.servico.nome }}{% endblock %}
+{% block content %}
+{% if solicitacao.status == 'concluido' and user == solicitacao.usuario %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="alert alert-success text-center py-5 px-4 w-100" role="status">
+        <h1 class="alert-heading display-3 fw-bold mb-0">SERVIÇO CONCLUÍDO</h1>
+        {% if avaliacao %}
+            <hr>
+            <h3>Sua avaliação</h3>
+            <div class="rating-result" aria-label="{{ avaliacao.estrelas }} de 5 estrelas">{{ avaliacao.get_estrelas_display }}</div>
+            {% if avaliacao.comentario %}<p class="mb-0">{{ avaliacao.comentario|linebreaksbr }}</p>{% endif %}
+        {% else %}
+            <hr>
+            <h3>Avalie o profissional</h3>
+            <form method="post" action="{% url 'services:avaliar_solicitacao' solicitacao.pk %}" class="evaluation-form text-start mx-auto">
+                {% csrf_token %}
+                <fieldset class="mb-3">
+                    <legend class="fs-6">{{ avaliacao_form.estrelas.label }}</legend>
+                    <div class="star-rating" role="radiogroup" aria-label="{{ avaliacao_form.estrelas.label }}">
+                        {% for value, label in avaliacao_form.estrelas.field.choices %}
+                            <input type="radio" name="estrelas" value="{{ value }}" id="star-{{ value }}" required>
+                            <label for="star-{{ value }}" title="{{ value }} estrela{{ value|pluralize }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                <div class="mb-3">
+                    <label class="form-label" for="id_comentario">{{ avaliacao_form.comentario.label }}</label>
+                    {{ avaliacao_form.comentario }}
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar avaliação</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Conversa sobre o serviço</h2>
+    </div>
+    <a href="{% if user == solicitacao.servico.profissional %}{% url 'services:solicitacoes_recebidas' %}{% else %}{% url 'services:minhas_solicitacoes' %}{% endif %}" class="btn btn-outline-secondary">Voltar</a>
+</div>
+
+<div class="row g-4">
+    <aside class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><strong>Minhas conversas</strong></div>
+            <div class="list-group list-group-flush">
+                {% for conversa in conversas %}
+                <a href="{% url 'services:conversa_solicitacao' conversa.pk %}"
+                   class="list-group-item list-group-item-action {% if conversa.pk == solicitacao.pk %}active{% endif %}">
+                    {% if user == conversa.servico.profissional %}
+                        <strong>{{ conversa.usuario.get_full_name|default:conversa.usuario.username }}</strong>
+                    {% else %}
+                        <strong>{{ conversa.servico.nome }}</strong>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <section class="col-lg-8">
+<div id="conversation-messages" class="border rounded bg-white p-3 mb-4" style="min-height: 220px; max-height: 380px; overflow-y: auto;">
+    {% for mensagem in mensagens %}
+    <div class="mb-3 {% if mensagem.autor == user %}text-end{% endif %}">
+        <div class="d-inline-block text-start bg-light rounded px-3 py-2">
+            {% if mensagem.autor == user %}
+                <strong>Você</strong>
+            {% else %}
+                <strong>{{ mensagem.autor.get_full_name|default:mensagem.autor.username }}</strong>
+            {% endif %}
+            <p class="mb-1">{{ mensagem.texto|linebreaksbr }}</p>
+            <small class="text-muted">{{ mensagem.criada_em|date:"d/m/Y H:i" }}</small>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted mb-0">Ainda não há mensagens. Inicie a conversa.</p>
+    {% endfor %}
+</div>
+
+{% if solicitacao.status == 'confirmado' %}
+    <form id="message-form" method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+    </form>
+    {% if user == solicitacao.usuario %}
+        <form method="post" action="{% url 'services:concluir_solicitacao' solicitacao.pk %}" class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg w-100">Serviço concluído</button>
+        </form>
+    {% endif %}
+{% endif %}
+    </section>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const conversation = document.getElementById('conversation-messages');
+        if (conversation) {
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        const messageForm = document.getElementById('message-form');
+        if (messageForm) {
+            messageForm.scrollIntoView({block: 'start'});
+            const messageField = messageForm.querySelector('textarea, input');
+            if (messageField) {
+                messageField.focus();
+            }
+            messageForm.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' && !event.shiftKey && event.target.matches('textarea, input')) {
+                    event.preventDefault();
+                    messageForm.submit();
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

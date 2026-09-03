@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Servico, SolicitacaoServico, CategoriaServico
+from .models import Servico, SolicitacaoServico, CategoriaServico, MensagemSolicitacao, Avaliacao
 
 
 class ServicoForm(forms.ModelForm):
@@ -31,6 +31,33 @@ class SolicitarServicoForm(forms.ModelForm):
         labels = {'mensagem': 'Mensagem para o profissional (opcional)'}
         widgets = {
             'mensagem': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Detalhe o que você precisa...'}),
+        }
+
+
+class MensagemSolicitacaoForm(forms.ModelForm):
+    class Meta:
+        model = MensagemSolicitacao
+        fields = ['texto']
+        labels = {'texto': 'Mensagem'}
+        widgets = {
+            'texto': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Escreva uma mensagem sobre o serviço...',
+            }),
+        }
+
+
+class AvaliacaoForm(forms.ModelForm):
+    class Meta:
+        model = Avaliacao
+        fields = ['estrelas', 'comentario']
+        labels = {
+            'estrelas': 'Como você avalia o profissional?',
+            'comentario': 'Comentário (opcional)',
+        }
+        widgets = {
+            'estrelas': forms.RadioSelect(attrs={'class': 'rating-options'}),
+            'comentario': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Conte como foi o serviço...'}),
         }
 
 

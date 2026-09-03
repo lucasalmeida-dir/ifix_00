@@ -11,6 +11,8 @@ class UserRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True, label='E-mail')
     telefone = forms.CharField(required=False, label='Telefone')
     endereco = forms.CharField(required=False, label='Endereço')
+    numero = forms.CharField(required=False, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
+    complemento = forms.CharField(required=False, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
 
     class Meta:
         model = User
@@ -28,6 +30,8 @@ class UserRegisterForm(UserCreationForm):
             tipo=Profile.TIPO_USUARIO,
             telefone=self.cleaned_data.get('telefone', ''),
             endereco=self.cleaned_data.get('endereco', ''),
+            numero=self.cleaned_data.get('numero', ''),
+            complemento=self.cleaned_data.get('complemento', ''),
         )
         return user
 
@@ -38,6 +42,8 @@ class ProfessionalRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True, label='E-mail')
     telefone = forms.CharField(required=False, label='Telefone')
     endereco = forms.CharField(required=False, label='Endereço')
+    numero = forms.CharField(required=False, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
+    complemento = forms.CharField(required=False, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
     especialidade = forms.CharField(
         required=False, label='Especialidade/Área de atuação',
         help_text='Ex: Hidráulica, Elétrica, Marcenaria...'
@@ -59,6 +65,8 @@ class ProfessionalRegisterForm(UserCreationForm):
             tipo=Profile.TIPO_PROFISSIONAL,
             telefone=self.cleaned_data.get('telefone', ''),
             endereco=self.cleaned_data.get('endereco', ''),
+            numero=self.cleaned_data.get('numero', ''),
+            complemento=self.cleaned_data.get('complemento', ''),
             especialidade=self.cleaned_data.get('especialidade', ''),
         )
         return user
@@ -73,15 +81,19 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['telefone', 'endereco', 'especialidade']
+        fields = ['telefone', 'endereco', 'numero', 'complemento', 'especialidade']
         labels = {
             'telefone': 'Telefone',
             'endereco': 'Endereço',
+            'numero': 'Número',
+            'complemento': 'Complemento',
             'especialidade': 'Especialidade/Área de atuação',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['numero'].widget.attrs['style'] = 'max-width: 180px;'
+        self.fields['complemento'].widget.attrs['style'] = 'max-width: 280px;'
         if self.instance and self.instance.user_id:
             self.fields['first_name'].initial = self.instance.user.first_name
             self.fields['last_name'].initial = self.instance.user.last_name

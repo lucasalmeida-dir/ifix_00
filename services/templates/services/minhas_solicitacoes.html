@@ -10,6 +10,7 @@
                 <th>Profissional</th>
                 <th>Status</th>
                 <th>Data</th>
+                <th>Conversa</th>
             </tr>
         </thead>
         <tbody>
@@ -19,9 +20,16 @@
                 <td>{{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}</td>
                 <td><span class="badge text-bg-secondary">{{ s.get_status_display }}</span></td>
                 <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if s.status == 'confirmado' %}
+                    <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary btn-sm">Conversar</a>
+                    {% else %}
+                    <span class="text-muted">Disponível após aceite</span>
+                    {% endif %}
+                </td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="text-muted">Você ainda não solicitou nenhum serviço.</td></tr>
+            <tr><td colspan="5" class="text-muted">Você ainda não solicitou nenhum serviço.</td></tr>
             {% endfor %}
         </tbody>
     </table>
