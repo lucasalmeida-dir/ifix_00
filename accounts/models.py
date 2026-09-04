@@ -26,6 +26,7 @@ class Profile(models.Model):
     endereco = models.CharField(max_length=255, blank=True, verbose_name='Endereço')
     numero = models.CharField(max_length=10, blank=True, verbose_name='Número')
     complemento = models.CharField(max_length=100, blank=True, verbose_name='Complemento')
+    foto = models.FileField(upload_to='fotos_perfil/', blank=True, verbose_name='Foto de perfil')
     especialidade = models.CharField(
         max_length=255, blank=True,
         verbose_name='Especialidade/Área de atuação',

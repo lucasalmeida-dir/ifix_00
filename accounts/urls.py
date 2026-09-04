@@ -2,6 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import views
+from .forms import IFIXAuthenticationForm
 
 app_name = 'accounts'
 
@@ -9,7 +10,10 @@ urlpatterns = [
     # --- Autenticação (B) ---
     path(
         'login/',
-        auth_views.LoginView.as_view(template_name='accounts/login.html'),
+        auth_views.LoginView.as_view(
+            template_name='accounts/login.html',
+            authentication_form=IFIXAuthenticationForm,
+        ),
         name='login',
     ),  # B1 - Login
     path(

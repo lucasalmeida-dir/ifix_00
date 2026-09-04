@@ -21,7 +21,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Sou usuário</h5>
-                                <p class="card-text text-muted small">Busque profissionais e solicite serviços.</p>
                                 <a href="{% url 'accounts:register_user' %}" class="btn btn-primary w-100 mb-2">Criar conta de usuário</a>
                                 <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary w-100">Já tenho conta</a>
                             </div>
@@ -31,7 +30,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Sou profissional</h5>
-                                <p class="card-text text-muted small">Ofereça seus serviços na plataforma.</p>
                                 <a href="{% url 'accounts:register_professional' %}" class="btn btn-success w-100 mb-2">Criar conta profissional</a>
                                 <a href="{% url 'accounts:login' %}" class="btn btn-outline-success w-100">Já tenho conta</a>
                             </div>
@@ -44,7 +42,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Visualizar serviços</h5>
-                                <p class="card-text text-muted small">Veja todos os serviços disponíveis.</p>
                                 <a href="{% url 'services:servico_list' %}" class="btn btn-outline-primary w-100">Explorar</a>
                             </div>
                         </div>
@@ -53,7 +50,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Minhas solicitações</h5>
-                                <p class="card-text text-muted small">Acompanhe seus pedidos.</p>
                                 <a href="{% url 'services:minhas_solicitacoes' %}" class="btn btn-outline-primary w-100">Ver solicitações</a>
                             </div>
                         </div>
@@ -62,7 +58,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Editar perfil</h5>
-                                <p class="card-text text-muted small">Atualize seus dados.</p>
                                 <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-secondary w-100">Editar</a>
                             </div>
                         </div>
@@ -74,7 +69,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Meus serviços</h5>
-                                <p class="card-text text-muted small">Gerencie seus serviços.</p>
                                 <a href="{% url 'services:meus_servicos' %}" class="btn btn-success w-100">Gerenciar</a>
                             </div>
                         </div>
@@ -83,7 +77,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Adicionar serviço</h5>
-                                <p class="card-text text-muted small">Cadastre um novo serviço.</p>
                                 <a href="{% url 'services:servico_criar' %}" class="btn btn-success w-100">Adicionar</a>
                             </div>
                         </div>
@@ -92,7 +85,6 @@
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <h5 class="card-title">Solicitações recebidas</h5>
-                                <p class="card-text text-muted small">Veja quem solicitou seus serviços.</p>
                                 <a href="{% url 'services:solicitacoes_recebidas' %}" class="btn btn-outline-secondary w-100">Ver solicitações</a>
                             </div>
                         </div>
@@ -103,7 +95,4 @@
     </div>
 </div>
 
-<div class="text-center mb-4">
-    <a href="{% url 'services:servico_list' %}" class="btn btn-outline-primary btn-lg">Ver todos os serviços disponíveis</a>
-</div>
 {% endblock %}

@@ -41,7 +41,16 @@
             </ul>
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'accounts:profile_edit' %}">Olá, {{ user.first_name|default:user.username }}</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-2 {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'accounts:profile_edit' %}">
+                            {% if user.profile.foto %}
+                                <img src="{{ user.profile.foto.url }}" alt="Foto de perfil" class="profile-avatar">
+                            {% else %}
+                                <span class="profile-avatar profile-avatar-placeholder" aria-label="Sem foto de perfil">{{ user.username|first|upper }}</span>
+                            {% endif %}
+                            Olá, {{ user.first_name|default:user.username }}
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
                             {% csrf_token %}

@@ -29,7 +29,7 @@ def servico_list(request):
     (alimentados por P9 - Serviço disponível para usuários).
     """
     form = BuscaServicoForm(request.GET or None)
-    servicos = Servico.objects.filter(disponivel=True).select_related('categoria', 'profissional').annotate(
+    servicos = Servico.objects.filter(disponivel=True).select_related('categoria', 'profissional', 'profissional__profile').annotate(
         avaliacao_media=Avg('profissional__avaliacoes_recebidas__estrelas'),
         total_avaliacoes=Count('profissional__avaliacoes_recebidas', distinct=True),
     )

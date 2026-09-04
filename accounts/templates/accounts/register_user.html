@@ -5,13 +5,16 @@
     <div class="col-md-6">
         <h2 class="mb-1">Cadastro de usuário</h2>
         <p class="text-muted">Crie sua conta para buscar profissionais e solicitar serviços.</p>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}
                 <div class="mb-3{% if field.name == 'numero' or field.name == 'complemento' %} address-detail-field{% endif %}">
                     <label class="form-label">{{ field.label }}</label>
-                    {{ field.errors }}
+                    {% if field.name != 'password1' and field.name != 'password2' %}{{ field.errors }}{% endif %}
                     <div>{{ field }}</div>
+                    {% if field.name == 'password1' or field.name == 'password2' %}
+                        {% if field.errors %}<div class="password-error" role="alert">Errou a senha</div>{% endif %}
+                    {% endif %}
                     {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
                 </div>
             {% endfor %}

@@ -9,8 +9,11 @@
             {% for field in form %}
                 <div class="mb-3">
                     <label class="form-label">{{ field.label }}</label>
-                    {{ field.errors }}
+                    {% if field.name != 'password' %}{{ field.errors }}{% endif %}
                     <div>{{ field }}</div>
+                    {% if field.name == 'password' and form.non_field_errors %}
+                        <div class="password-error" role="alert">Errou a senha</div>
+                    {% endif %}
                 </div>
             {% endfor %}
             <button type="submit" class="btn btn-primary w-100">Entrar</button>

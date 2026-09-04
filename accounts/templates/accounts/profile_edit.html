@@ -7,17 +7,60 @@
             {% if profile.is_profissional %}Editar dados profissionais{% else %}Editar perfil{% endif %}
         </h2>
         <p class="text-muted">Conta: {{ profile.get_tipo_display }}</p>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}
+                {% if field.name == 'foto' %}
+                <div class="mb-3 profile-photo-field">
+                    <label class="form-label">Foto de perfil</label>
+                    <div class="profile-photo-picker">
+                        {% if profile.foto %}
+                            <img id="profile-photo-preview" src="{{ profile.foto.url }}" alt="Foto de perfil atual" class="profile-photo-preview">
+                        {% else %}
+                            <div id="profile-photo-preview" class="profile-photo-placeholder">Sem foto</div>
+                        {% endif %}
+                        <label for="id_foto" class="btn btn-outline-primary">Escolher nova foto</label>
+                        {{ field }}
+                    </div>
+                    <small id="profile-photo-name" class="text-muted"></small>
+                    {{ field.errors }}
+                </div>
+                {% else %}
                 <div class="mb-3{% if field.name == 'numero' or field.name == 'complemento' %} address-detail-field{% endif %}">
                     <label class="form-label">{{ field.label }}</label>
                     {{ field.errors }}
                     <div>{{ field }}</div>
                 </div>
+                {% endif %}
             {% endfor %}
             <button type="submit" class="btn btn-primary w-100">Salvar alterações</button>
         </form>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('id_foto');
+        const preview = document.getElementById('profile-photo-preview');
+        if (input && preview) {
+            input.addEventListener('change', function () {
+                const file = input.files[0];
+                if (!file || !file.type.startsWith('image/')) {
+                    return;
+                }
+                const imageUrl = URL.createObjectURL(file);
+                document.getElementById('profile-photo-name').textContent = file.name;
+                if (preview.tagName === 'IMG') {
+                    preview.src = imageUrl;
+                } else {
+                    const image = document.createElement('img');
+                    image.id = 'profile-photo-preview';
+                    image.className = 'profile-photo-preview';
+                    image.alt = 'Pré-visualização da foto de perfil';
+                    image.src = imageUrl;
+                    preview.replaceWith(image);
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

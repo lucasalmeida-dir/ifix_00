@@ -10,7 +10,7 @@ from .models import Profile
 def register_user(request):
     """U1 - Cadastro de usuário."""
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
+        form = UserRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
@@ -24,7 +24,7 @@ def register_user(request):
 def register_professional(request):
     """P1 - Cadastro profissional."""
     if request.method == 'POST':
-        form = ProfessionalRegisterForm(request.POST)
+        form = ProfessionalRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)
@@ -40,9 +40,12 @@ def profile_edit(request):
     """U2 - Editar perfil / P2 - Editar dados profissionais."""
     profile = get_object_or_404(Profile, user=request.user)
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST, instance=profile)
+        form = ProfileEditForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
+            profile = form.save(commit=False)
+            if request.FILES.get('foto'):
+                profile.foto = request.FILES['foto']
+            profile.save()
             messages.success(request, 'Dados atualizados com sucesso.')
             return redirect('home')
     else:
