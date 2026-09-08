@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
@@ -13,8 +15,8 @@ def estrelas_da_media(media):
 
 class CategoriaServico(models.Model):
     """
-    Categorias de serviço (O1 a O5 do diagrama):
-    Hidráulica, Elétrica, Desentupimento, Marcenaria e Seu problema (outros).
+    Categorias de serviço (O1 a O4 do diagrama):
+    Hidráulica, Elétrica, Marcenaria e Pintura.
     """
 
     nome = models.CharField(max_length=100, unique=True)
@@ -58,7 +60,16 @@ class Servico(models.Model):
     )
     nome = models.CharField(max_length=150, verbose_name='Nome do serviço')  # P4
     descricao = models.TextField(verbose_name='Descrição')  # P5
-    preco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço (R$)')  # P6
+    preco_min = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name='Preço estimado a partir de (R$)',
+    )  # P6
+    preco_max = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)],
+        verbose_name='Preço estimado até (R$)',
+    )  # P6
     duracao_minutos = models.PositiveIntegerField(verbose_name='Duração estimada (minutos)')  # P7
     disponivel = models.BooleanField(default=True, verbose_name='Disponível para usuários')  # P9
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -71,6 +82,20 @@ class Servico(models.Model):
 
     def __str__(self):
         return f'{self.nome} ({self.profissional.username})'
+
+    def clean(self):
+        super().clean()
+        if self.preco_min is not None and self.preco_max is not None and self.preco_max < self.preco_min:
+            raise ValidationError({
+                'preco_max': 'O preço máximo não pode ser menor que o preço mínimo.',
+            })
+
+    @property
+    def faixa_preco(self):
+        """Texto pronto para exibir a estimativa de preço ao cliente."""
+        if self.preco_min == self.preco_max:
+            return f'R$ {self.preco_min}'
+        return f'R$ {self.preco_min} - R$ {self.preco_max}'
 
     def get_absolute_url(self):
         return reverse('services:servico_detail', args=[self.pk])

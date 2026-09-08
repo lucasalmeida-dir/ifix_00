@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .forms import UserRegisterForm, ProfessionalRegisterForm, ProfileEditForm
 from .models import Profile
+from .services import CepInvalidoError, consultar_cep
 
 
 def register_user(request):
@@ -51,3 +53,20 @@ def profile_edit(request):
     else:
         form = ProfileEditForm(instance=profile)
     return render(request, 'accounts/profile_edit.html', {'form': form, 'profile': profile})
+
+
+def consultar_cep_view(request):
+    """
+    Endpoint AJAX (GET ?cep=00000000) usado pelo JS dos formulários de
+    cadastro/edição para autopreencher o endereço a partir do CEP,
+    consultando a ViaCEP. A latitude/longitude
+    (quando disponíveis) são calculadas e salvas de fato no `clean_cep`
+    dos formulários — este endpoint serve apenas para dar feedback
+    visual imediato ao usuário enquanto digita.
+    """
+    cep = request.GET.get('cep', '')
+    try:
+        dados = consultar_cep(cep)
+    except CepInvalidoError as exc:
+        return JsonResponse({'erro': str(exc)}, status=400)
+    return JsonResponse(dados)

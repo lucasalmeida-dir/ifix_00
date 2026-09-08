@@ -23,6 +23,9 @@ class Profile(models.Model):
     )
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, verbose_name='Tipo de conta')
     telefone = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
+    cep = models.CharField(max_length=9, blank=True, verbose_name='CEP')
+    latitude = models.FloatField(null=True, blank=True, verbose_name='Latitude')
+    longitude = models.FloatField(null=True, blank=True, verbose_name='Longitude')
     endereco = models.CharField(max_length=255, blank=True, verbose_name='Endereço')
     numero = models.CharField(max_length=10, blank=True, verbose_name='Número')
     complemento = models.CharField(max_length=100, blank=True, verbose_name='Complemento')
@@ -48,3 +51,8 @@ class Profile(models.Model):
     @property
     def is_usuario(self):
         return self.tipo == self.TIPO_USUARIO
+
+    @property
+    def tem_localizacao(self):
+        """Indica se há coordenadas (obtidas via CEP) para calcular distância."""
+        return self.latitude is not None and self.longitude is not None

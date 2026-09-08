@@ -448,3 +448,54 @@ form ul.errorlist {
     margin-bottom: 0.25rem;
     font-size: 0.9rem;
 }
+
+/* ---------- Campo de senha com botão de mostrar/ocultar (olhinho) ---------- */
+.password-field-wrapper {
+    position: relative;
+}
+
+.password-field-wrapper input {
+    padding-right: 2.75rem;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    top: 50%;
+    right: 0.4rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: none;
+    border: none;
+    color: var(--color-blue);
+    cursor: pointer;
+    border-radius: 0.25rem;
+}
+
+.password-toggle-btn:hover,
+.password-toggle-btn:focus-visible {
+    color: var(--color-gold-dark);
+    outline: none;
+}
+
+.password-toggle-btn svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    pointer-events: none;
+}
+
+/* ---------- Indicador de campo obrigatório ---------- */
+.required-field-marker {
+    color: #dc3545;
+    margin-left: 0.15rem;
+    font-weight: 700;
+}
+
+.required-fields-hint {
+    color: #6c757d;
+    font-size: 0.85rem;
+}

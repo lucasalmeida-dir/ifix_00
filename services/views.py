@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect, get_object_or_404
 
 from accounts.decorators import professional_required, user_required
+from accounts.services import calcular_distancia_km
 from .forms import ServicoForm, SolicitarServicoForm, BuscaServicoForm, MensagemSolicitacaoForm, AvaliacaoForm
 from .models import (
     Servico,
@@ -48,14 +49,28 @@ def servico_list(request):
         if categoria:
             servicos = servicos.filter(categoria=categoria)
 
+    # Perfil do cliente logado (se houver) para calcular a distância até
+    # cada profissional a partir das coordenadas obtidas via CEP.
+    perfil_usuario = getattr(request.user, 'profile', None) if request.user.is_authenticated else None
+    calcular_distancia = bool(perfil_usuario and perfil_usuario.tem_localizacao)
+
     for servico in servicos:
         servico.avaliacao_estrelas = estrelas_da_media(servico.avaliacao_media)
+        servico.distancia_km = None
+        if calcular_distancia:
+            perfil_profissional = getattr(servico.profissional, 'profile', None)
+            if perfil_profissional and perfil_profissional.tem_localizacao:
+                servico.distancia_km = calcular_distancia_km(
+                    perfil_usuario.latitude, perfil_usuario.longitude,
+                    perfil_profissional.latitude, perfil_profissional.longitude,
+                )
 
     categorias = CategoriaServico.objects.all()
     return render(request, 'services/servico_list.html', {
         'servicos': servicos,
         'form': form,
         'categorias': categorias,
+        'distancia_disponivel': calcular_distancia,
     })
 
 
@@ -70,6 +85,17 @@ def servico_detail(request, pk):
         disponivel=True,
     )
     servico.avaliacao_estrelas = estrelas_da_media(servico.avaliacao_media)
+
+    servico.distancia_km = None
+    perfil_usuario = getattr(request.user, 'profile', None) if request.user.is_authenticated else None
+    if perfil_usuario and perfil_usuario.tem_localizacao:
+        perfil_profissional = getattr(servico.profissional, 'profile', None)
+        if perfil_profissional and perfil_profissional.tem_localizacao:
+            servico.distancia_km = calcular_distancia_km(
+                perfil_usuario.latitude, perfil_usuario.longitude,
+                perfil_profissional.latitude, perfil_profissional.longitude,
+            )
+
     return render(request, 'services/servico_detail.html', {'servico': servico})
 
 
@@ -164,11 +190,35 @@ def servico_excluir(request, pk):
 
 @professional_required
 def solicitacoes_recebidas(request):
-    """Solicitações recebidas para os serviços do profissional logado."""
+    """
+    Solicitações recebidas para os serviços do profissional logado.
+
+    Em vez de expor o endereço do cliente, mostra a distância aproximada
+    (em km) entre o profissional e o cliente, calculada a partir das
+    coordenadas obtidas via CEP de ambos (mesma cadeia de APIs usada na
+    listagem de serviços: ViaCEP + AwesomeAPI/Nominatim).
+    """
     solicitacoes = SolicitacaoServico.objects.filter(
         servico__profissional=request.user
     ).select_related('servico', 'usuario', 'usuario__profile')
-    return render(request, 'services/solicitacoes_recebidas.html', {'solicitacoes': solicitacoes})
+
+    perfil_profissional = getattr(request.user, 'profile', None)
+    profissional_tem_localizacao = bool(perfil_profissional and perfil_profissional.tem_localizacao)
+
+    for solicitacao in solicitacoes:
+        solicitacao.distancia_km = None
+        if profissional_tem_localizacao:
+            perfil_cliente = getattr(solicitacao.usuario, 'profile', None)
+            if perfil_cliente and perfil_cliente.tem_localizacao:
+                solicitacao.distancia_km = calcular_distancia_km(
+                    perfil_profissional.latitude, perfil_profissional.longitude,
+                    perfil_cliente.latitude, perfil_cliente.longitude,
+                )
+
+    return render(request, 'services/solicitacoes_recebidas.html', {
+        'solicitacoes': solicitacoes,
+        'profissional_tem_localizacao': profissional_tem_localizacao,
+    })
 
 
 @professional_required

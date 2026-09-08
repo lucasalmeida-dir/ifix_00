@@ -4,9 +4,8 @@ from django.db import migrations
 CATEGORIAS = [
     ('Hidráulica', 'hidraulica', '🚰'),
     ('Elétrica', 'eletrica', '💡'),
-    ('Desentupimento', 'desentupimento', '🪠'),
+    ('Pintura', 'pintura', '🎨'),
     ('Marcenaria', 'marcenaria', '🪚'),
-    ('Seu problema', 'seu-problema', '🛠️'),
 ]
 
 

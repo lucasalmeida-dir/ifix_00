@@ -4,21 +4,24 @@ from .models import Servico, SolicitacaoServico, CategoriaServico, MensagemSolic
 
 
 class ServicoForm(forms.ModelForm):
-    """P3-P8: Adicionar/editar serviço (nome, descrição, preço, duração)."""
+    """P3-P8: Adicionar/editar serviço (nome, descrição, faixa de preço, duração)."""
 
     class Meta:
         model = Servico
-        fields = ['categoria', 'nome', 'descricao', 'preco', 'duracao_minutos', 'disponivel']
+        fields = ['categoria', 'nome', 'descricao', 'preco_min', 'preco_max', 'duracao_minutos', 'disponivel']
         labels = {
             'categoria': 'Categoria',
             'nome': 'Nome do serviço',
             'descricao': 'Descrição',
-            'preco': 'Preço (R$)',
+            'preco_min': 'Preço estimado de (R$)',
+            'preco_max': 'até (R$)',
             'duracao_minutos': 'Duração estimada (minutos)',
             'disponivel': 'Disponível para usuários',
         }
         widgets = {
             'descricao': forms.Textarea(attrs={'rows': 4}),
+            'preco_min': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+            'preco_max': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
         }
 
 

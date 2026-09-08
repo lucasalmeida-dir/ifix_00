@@ -1,0 +1,66 @@
+<script>
+    // Consulta de CEP (ViaCEP) para autopreencher o endereço e,
+    // internamente, guardar as coordenadas usadas depois no cálculo de
+    // distância entre profissional e cliente.
+    document.addEventListener('DOMContentLoaded', function () {
+        var cepInput = document.getElementById('id_cep');
+        if (!cepInput) {
+            return;
+        }
+
+        var enderecoInput = document.getElementById('id_endereco');
+
+        var feedback = document.createElement('small');
+        feedback.className = 'cep-feedback text-muted d-block mt-1';
+        cepInput.closest('.mb-3').appendChild(feedback);
+
+        // Máscara simples: 00000-000
+        cepInput.addEventListener('input', function () {
+            var digitos = cepInput.value.replace(/\D/g, '').slice(0, 8);
+            if (digitos.length > 5) {
+                cepInput.value = digitos.slice(0, 5) + '-' + digitos.slice(5);
+            } else {
+                cepInput.value = digitos;
+            }
+        });
+
+        function consultarCep() {
+            var digitos = cepInput.value.replace(/\D/g, '');
+            if (digitos.length !== 8) {
+                return;
+            }
+            feedback.textContent = 'Consultando CEP...';
+            feedback.classList.remove('text-danger', 'text-success');
+
+            fetch('{% url "accounts:consultar_cep" %}?cep=' + digitos)
+                .then(function (resposta) {
+                    return resposta.json().then(function (dados) {
+                        return { ok: resposta.ok, dados: dados };
+                    });
+                })
+                .then(function (resultado) {
+                    if (!resultado.ok) {
+                        feedback.textContent = resultado.dados.erro || 'CEP não encontrado.';
+                        feedback.classList.add('text-danger');
+                        return;
+                    }
+                    var dados = resultado.dados;
+                    var partesEndereco = [dados.logradouro, dados.bairro, dados.cidade && dados.uf ? (dados.cidade + '/' + dados.uf) : (dados.cidade || dados.uf)]
+                        .filter(Boolean);
+                    if (enderecoInput && !enderecoInput.value.trim() && partesEndereco.length) {
+                        enderecoInput.value = partesEndereco.join(', ');
+                    }
+                    feedback.textContent = partesEndereco.length
+                        ? 'Endereço localizado: ' + partesEndereco.join(', ')
+                        : 'CEP localizado.';
+                    feedback.classList.add('text-success');
+                })
+                .catch(function () {
+                    feedback.textContent = 'Não foi possível consultar o CEP agora.';
+                    feedback.classList.add('text-danger');
+                });
+        }
+
+        cepInput.addEventListener('blur', consultarCep);
+    });
+</script>

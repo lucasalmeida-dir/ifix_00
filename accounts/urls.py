@@ -63,4 +63,7 @@ urlpatterns = [
 
     # Comum às duas áreas
     path('perfil/editar/', views.profile_edit, name='profile_edit'),  # U2 / P2
+
+    # Consulta de CEP (ViaCEP) usada via AJAX nos formulários de cadastro/edição
+    path('cep/consultar/', views.consultar_cep_view, name='consultar_cep'),
 ]

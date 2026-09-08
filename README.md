@@ -6,9 +6,9 @@ Projeto Django gerado a partir do diagrama de fluxo (Mermaid) com três grandes 
 - **Área do Usuário**: cadastro, editar perfil, visualizar serviços, buscar
   profissionais, filtrar por categoria, consultar preço/duração e solicitar serviço.
 - **Área do Profissional**: cadastro profissional, editar dados profissionais,
-  categorias de serviço (Hidráulica, Elétrica, Desentupimento, Marcenaria, Seu
-  problema) e cadastro de serviços (nome, descrição, preço, duração, salvar —
-  ficando disponível para os usuários).
+  categorias de serviço (Hidráulica, Elétrica, Desentupimento, Marcenaria) e
+  cadastro de serviços (nome, descrição, preço, duração, salvar — ficando
+  disponível para os usuários).
 
 ## Estrutura
 
