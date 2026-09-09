@@ -59,7 +59,10 @@ class Servico(models.Model):
         related_name='servicos',
     )
     nome = models.CharField(max_length=150, verbose_name='Nome do serviço')  # P4
-    descricao = models.TextField(verbose_name='Descrição')  # P5
+    subservico = models.CharField(
+        max_length=150, blank=True, verbose_name='Subserviço',
+    )  # P4.1 - opção específica dentro do serviço, conforme a categoria
+    descricao = models.TextField(verbose_name='Observação')  # P5
     preco_min = models.DecimalField(
         max_digits=10, decimal_places=2,
         validators=[MinValueValidator(0)],
