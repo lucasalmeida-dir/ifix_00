@@ -4,7 +4,7 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
         <h2 class="mb-1">{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}</h2>
-        <p class="text-muted">Informe nome, descrição, faixa de preço estimada e duração do serviço.</p>
+        <p class="text-muted">Escolha a categoria e o subserviço, e informe a faixa de preço estimada e a duração.</p>
         <form method="post">
             {% csrf_token %}
             {{ form.non_field_errors }}
@@ -20,4 +20,62 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var categoriaSelect = document.getElementById('id_categoria');
+        var subservicoSelect = document.getElementById('id_subservico');
+
+        if (!categoriaSelect || !subservicoSelect) {
+            return;
+        }
+
+        function slugDaCategoriaSelecionada() {
+            var opcao = categoriaSelect.options[categoriaSelect.selectedIndex];
+            return opcao ? opcao.getAttribute('data-slug') : null;
+        }
+
+        // Mostra no <select> de Subserviço apenas as opções cujo
+        // data-categoria bate com a categoria escolhida (a opção em
+        // branco fica sempre disponível).
+        function filtrarPorCategoria(select, manterValorAtual) {
+            var slug = slugDaCategoriaSelecionada();
+            var valorAtual = select.value;
+
+            Array.prototype.forEach.call(select.options, function (opcao) {
+                if (!opcao.value) {
+                    opcao.hidden = false;
+                    opcao.disabled = false;
+                    return;
+                }
+                var pertence = !slug || opcao.getAttribute('data-categoria') === slug;
+                opcao.hidden = !pertence;
+                opcao.disabled = !pertence;
+            });
+
+            if (manterValorAtual && valorAtual) {
+                var opcaoAtual = null;
+                Array.prototype.forEach.call(select.options, function (opcao) {
+                    if (opcao.value === valorAtual) {
+                        opcaoAtual = opcao;
+                    }
+                });
+                if (opcaoAtual && !opcaoAtual.hidden) {
+                    select.value = valorAtual;
+                    return;
+                }
+            }
+
+            select.value = '';
+        }
+
+        categoriaSelect.addEventListener('change', function () {
+            filtrarPorCategoria(subservicoSelect, false);
+        });
+
+        // Estado inicial: em edição, tenta manter o subserviço já salvo;
+        // em um formulário novo, filtra a partir do zero.
+        filtrarPorCategoria(subservicoSelect, true);
+    });
+</script>
 {% endblock %}
