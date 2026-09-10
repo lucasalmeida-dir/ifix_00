@@ -18,6 +18,8 @@ ESPECIALIDADE_CHOICES = (
 
 
 class IFIXAuthenticationForm(AuthenticationForm):
+    """Formulário de autenticação com mensagem de erro customizada."""
+
     def clean(self):
         try:
             return super().clean()
@@ -63,27 +65,23 @@ class UserRegisterForm(UserCreationForm):
         return info_cep['cep']
 
     def save(self, commit=True):
-        user = super().save(commit=commit)
-        cep_info = self.cleaned_data.get('cep_info') or {}
-        Profile.objects.create(
-            user=user,
-            tipo=Profile.TIPO_USUARIO,
-            telefone=self.cleaned_data.get('telefone', ''),
-            cep=self.cleaned_data.get('cep', ''),
-            latitude=cep_info.get('latitude'),
-            longitude=cep_info.get('longitude'),
-            endereco=self.cleaned_data.get('endereco', ''),
-            numero=self.cleaned_data.get('numero', ''),
-            complemento=self.cleaned_data.get('complemento', ''),
-            foto=self.cleaned_data.get('foto'),
-        )
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            cep_info = self.cleaned_data.get('cep_info') or {}
+            Profile.objects.create(
+                user=user,
+                tipo=Profile.TIPO_USUARIO,
+                telefone=self.cleaned_data.get('telefone', ''),
+                cep=self.cleaned_data.get('cep', ''),
+                latitude=cep_info.get('latitude'),
+                longitude=cep_info.get('longitude'),
+                endereco=self.cleaned_data.get('endereco', ''),
+                numero=self.cleaned_data.get('numero', ''),
+                complemento=self.cleaned_data.get('complemento', ''),
+                foto=self.cleaned_data.get('foto'),
+            )
         return user
-
-    def clean_password2(self):
-        try:
-            return super().clean_password2()
-        except forms.ValidationError:
-            raise forms.ValidationError('Errou a senha')
 
 
 class ProfessionalRegisterForm(UserCreationForm):
@@ -128,28 +126,24 @@ class ProfessionalRegisterForm(UserCreationForm):
         return info_cep['cep']
 
     def save(self, commit=True):
-        user = super().save(commit=commit)
-        cep_info = self.cleaned_data.get('cep_info') or {}
-        Profile.objects.create(
-            user=user,
-            tipo=Profile.TIPO_PROFISSIONAL,
-            telefone=self.cleaned_data.get('telefone', ''),
-            cep=self.cleaned_data.get('cep', ''),
-            latitude=cep_info.get('latitude'),
-            longitude=cep_info.get('longitude'),
-            endereco=self.cleaned_data.get('endereco', ''),
-            numero=self.cleaned_data.get('numero', ''),
-            complemento=self.cleaned_data.get('complemento', ''),
-            foto=self.cleaned_data.get('foto'),
-            especialidade=self.cleaned_data.get('especialidade', ''),
-        )
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            cep_info = self.cleaned_data.get('cep_info') or {}
+            Profile.objects.create(
+                user=user,
+                tipo=Profile.TIPO_PROFISSIONAL,
+                telefone=self.cleaned_data.get('telefone', ''),
+                cep=self.cleaned_data.get('cep', ''),
+                latitude=cep_info.get('latitude'),
+                longitude=cep_info.get('longitude'),
+                endereco=self.cleaned_data.get('endereco', ''),
+                numero=self.cleaned_data.get('numero', ''),
+                complemento=self.cleaned_data.get('complemento', ''),
+                foto=self.cleaned_data.get('foto'),
+                especialidade=self.cleaned_data.get('especialidade', ''),
+            )
         return user
-
-    def clean_password2(self):
-        try:
-            return super().clean_password2()
-        except forms.ValidationError:
-            raise forms.ValidationError('Errou a senha')
 
 
 class ProfileEditForm(forms.ModelForm):

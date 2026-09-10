@@ -39,10 +39,10 @@
                     </li>
                 {% endif %}
             </ul>
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-lg-center">
                 {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center gap-2 {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'accounts:profile_edit' %}">
+                    <li class="nav-item d-flex align-items-center">
+                        <a class="nav-link d-flex align-items-center gap-2 mb-0 {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'accounts:profile_edit' %}">
                             {% if user.profile.foto %}
                                 <img src="{{ user.profile.foto.url }}" alt="Foto de perfil" class="profile-avatar">
                             {% else %}
@@ -50,11 +50,9 @@
                             {% endif %}
                             Olá, {{ user.first_name|default:user.username }}
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline ms-2">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-light btn-sm ms-2">Sair</button>
+                            <button type="submit" class="btn btn-outline-light btn-sm">Sair</button>
                         </form>
                     </li>
                 {% else %}
