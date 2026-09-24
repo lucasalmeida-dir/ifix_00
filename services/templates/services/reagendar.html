@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Reagendar visita{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h2 class="mb-1">Reagendar visita</h2>
+        <p class="text-muted mb-3">{{ solicitacao.servico.nome }} &middot; com {{ contato.get_full_name|default:contato.username }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <h3 class="request-step">Qual visita?</h3>
+            <div class="reagendar-visitas">
+                {% for radio in form.visita %}
+                    <label class="turno-chip turno-chip-wide">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+                {% endfor %}
+            </div>
+            {{ form.visita.errors }}
+
+            <h3 class="request-step">Nova data</h3>
+            <input type="date" name="nova_data" id="{{ form.nova_data.id_for_label }}" class="form-control" min="{{ hoje_iso }}" value="{{ form.nova_data.value|default_if_none:'' }}" required>
+            {{ form.nova_data.errors }}
+
+            <h3 class="request-step">Novo horário</h3>
+            <div class="turno-chips" role="radiogroup">
+                {% for radio in form.novo_turno %}
+                    <label class="turno-chip">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+                {% endfor %}
+            </div>
+
+            <h3 class="request-step">Motivo <span class="request-optional">(opcional)</span></h3>
+            {{ form.motivo }}
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Enviar proposta</button>
+            <a href="{% url 'services:conversa_solicitacao' solicitacao.pk %}" class="btn btn-outline-secondary w-100 mt-2">Voltar ao chat</a>
+        </form>
+
+        <h3 class="h6 mt-4">Regras de reagendamento</h3>
+        <ul class="rule-list">
+            {% for regra in regras %}<li>{{ regra }}</li>{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

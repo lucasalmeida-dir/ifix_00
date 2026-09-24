@@ -1,0 +1,53 @@
+{% comment %}Painel só para a equipe (staff com permissão): ver documento e foto do profissional e decidir o selo sem abrir o admin. Uso: {% include "_painel_verificacao.html" with perfil_verif=<Profile> %}{% endcomment %}
+{% if user.is_staff and perms.accounts.change_profile and perfil_verif.is_profissional %}
+<div class="trust-card admin-verif mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <strong>🛡️ Verificação de identidade <span class="text-muted fw-normal">(só a equipe vê)</span></strong>
+        {% if perfil_verif.verificacao_status == 'verificado' %}<span class="badge text-bg-success">Verificado</span>
+        {% elif perfil_verif.verificacao_status == 'pendente' %}<span class="badge text-bg-warning">Aguardando análise</span>
+        {% elif perfil_verif.verificacao_status == 'recusado' %}<span class="badge text-bg-danger">Recusado</span>
+        {% else %}<span class="badge text-bg-secondary">Não enviado</span>{% endif %}
+    </div>
+
+    {% if perfil_verif.documento or perfil_verif.foto_verificacao %}
+        <div class="admin-verif-imgs mb-3">
+            {% if perfil_verif.documento %}
+                <figure>
+                    {% if perfil_verif.documento.name|slice:"-4:"|lower == ".pdf" %}
+                        <a href="{% url 'accounts:arquivo_verificacao' perfil_verif.pk 'documento' %}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">Abrir PDF do documento</a>
+                    {% else %}
+                        <a href="{% url 'accounts:arquivo_verificacao' perfil_verif.pk 'documento' %}" target="_blank" rel="noopener"><img src="{% url 'accounts:arquivo_verificacao' perfil_verif.pk 'documento' %}" alt="Documento enviado"></a>
+                    {% endif %}
+                    <figcaption>Documento</figcaption>
+                </figure>
+            {% endif %}
+            {% if perfil_verif.foto_verificacao %}
+                <figure>
+                    <a href="{% url 'accounts:arquivo_verificacao' perfil_verif.pk 'foto' %}" target="_blank" rel="noopener"><img src="{% url 'accounts:arquivo_verificacao' perfil_verif.pk 'foto' %}" alt="Foto do rosto enviada"></a>
+                    <figcaption>Foto do rosto</figcaption>
+                </figure>
+            {% endif %}
+        </div>
+        {% if perfil_verif.verificacao_status == 'recusado' and perfil_verif.verificacao_motivo_recusa %}
+            <p class="small text-muted">Motivo da recusa: {{ perfil_verif.verificacao_motivo_recusa }}</p>
+        {% endif %}
+        <div class="d-flex flex-wrap gap-2 align-items-start">
+            {% if perfil_verif.verificacao_status != 'verificado' %}
+                <form method="post" action="{% url 'accounts:decidir_verificacao' perfil_verif.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" name="acao" value="aprovar" class="btn btn-success btn-sm">✔ Dar selo de verificado</button>
+                </form>
+            {% endif %}
+            <form method="post" action="{% url 'accounts:decidir_verificacao' perfil_verif.pk %}" class="d-flex flex-wrap gap-2 flex-grow-1">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="text" name="motivo" class="form-control form-control-sm" style="max-width: 18rem;" maxlength="500" placeholder="Motivo (opcional)">
+                <button type="submit" name="acao" value="recusar" class="btn btn-danger btn-sm">{% if perfil_verif.verificacao_status == 'verificado' %}✖ Remover selo{% else %}✖ Recusar{% endif %}</button>
+            </form>
+        </div>
+    {% else %}
+        <p class="mb-0 text-muted">Este profissional ainda não enviou documento e foto.</p>
+    {% endif %}
+</div>
+{% endif %}

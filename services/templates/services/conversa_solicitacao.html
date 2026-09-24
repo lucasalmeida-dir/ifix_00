@@ -1,104 +1,155 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
 {% block title %}Conversa sobre {{ solicitacao.servico.nome }}{% endblock %}
+{% load static %}
 {% block content %}
-{% if solicitacao.status == 'concluido' and user == solicitacao.usuario %}
-<div class="d-flex justify-content-center align-items-center" style="min-height: 60vh;">
-    <div class="alert alert-success text-center py-5 px-4 w-100" role="status">
-        <h1 class="alert-heading display-3 fw-bold mb-0">SERVIÇO CONCLUÍDO</h1>
-        {% if avaliacao %}
-            <hr>
-            <h3>Sua avaliação</h3>
-            <div class="rating-result" aria-label="{{ avaliacao.estrelas }} de 5 estrelas">{{ avaliacao.get_estrelas_display }}</div>
-            {% if avaliacao.comentario %}<p class="mb-0">{{ avaliacao.comentario|linebreaksbr }}</p>{% endif %}
-        {% else %}
-            <hr>
-            <h3>Avalie o profissional</h3>
-            <form method="post" action="{% url 'services:avaliar_solicitacao' solicitacao.pk %}" class="evaluation-form text-start mx-auto">
-                {% csrf_token %}
-                <fieldset class="mb-3">
-                    <legend class="fs-6">{{ avaliacao_form.estrelas.label }}</legend>
-                    <div class="star-rating" role="radiogroup" aria-label="{{ avaliacao_form.estrelas.label }}">
-                        {% for value, label in avaliacao_form.estrelas.field.choices %}
-                            <input type="radio" name="estrelas" value="{{ value }}" id="star-{{ value }}" required>
-                            <label for="star-{{ value }}" title="{{ value }} estrela{{ value|pluralize }}">&#9733;</label>
-                        {% endfor %}
-                    </div>
-                </fieldset>
-                <div class="mb-3">
-                    <label class="form-label" for="id_comentario">{{ avaliacao_form.comentario.label }}</label>
-                    {{ avaliacao_form.comentario }}
-                </div>
-                <button type="submit" class="btn btn-primary">Enviar avaliação</button>
-            </form>
-        {% endif %}
-    </div>
+<div class="blob-stage blob-stage-chat">
+<a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
+<span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+<span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+<div class="d-flex justify-content-between align-items-center mb-3" style="position: relative; z-index: 1; margin-top: 2.75rem;">
+    <h2 class="mb-0">Mensagens</h2>
+    <a href="{% if user == solicitacao.servico.profissional %}{% url 'services:solicitacoes_recebidas' %}{% else %}{% url 'services:minhas_solicitacoes' %}{% endif %}" class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex">Voltar</a>
+    <a href="{% url 'services:mensagens' %}" class="btn btn-outline-secondary btn-sm d-md-none">← Conversas</a>
 </div>
-{% else %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Conversa sobre o serviço</h2>
-    </div>
-    <a href="{% if user == solicitacao.servico.profissional %}{% url 'services:solicitacoes_recebidas' %}{% else %}{% url 'services:minhas_solicitacoes' %}{% endif %}" class="btn btn-outline-secondary">Voltar</a>
-</div>
-
-<div class="row g-4">
-    <aside class="col-lg-4">
-        <div class="card">
-            <div class="card-header"><strong>Minhas conversas</strong></div>
-            <div class="list-group list-group-flush">
-                {% for conversa in conversas %}
-                <a href="{% url 'services:conversa_solicitacao' conversa.pk %}"
-                   class="list-group-item list-group-item-action {% if conversa.pk == solicitacao.pk %}active{% endif %}">
-                    {% if user == conversa.servico.profissional %}
-                        <strong>{{ conversa.usuario.get_full_name|default:conversa.usuario.username }}</strong>
-                    {% else %}
-                        <strong>{{ conversa.servico.nome }}</strong>
-                    {% endif %}
-                </a>
-                {% endfor %}
-            </div>
+<div class="chat-app" style="position: relative; z-index: 1;">
+    <aside class="chat-sidebar">
+        <div class="chat-sidebar-header">Conversas</div>
+        <div class="chat-list">
+            {% for conversa in conversas %}
+                {% include "services/_conversa_item.html" with ativa_pk=solicitacao.pk %}
+            {% endfor %}
+            
         </div>
     </aside>
 
-    <section class="col-lg-8">
-<div id="conversation-messages" class="border rounded bg-white p-3 mb-4" style="min-height: 220px; max-height: 380px; overflow-y: auto;">
-    {% for mensagem in mensagens %}
-    <div class="mb-3 {% if mensagem.autor == user %}text-end{% endif %}">
-        <div class="d-inline-block text-start bg-light rounded px-3 py-2">
-            {% if mensagem.autor == user %}
-                <strong>Você</strong>
+    <section class="chat-main">
+        <div class="chat-header">
+            {% if contato.profile.foto %}
+                <img src="{{ contato.profile.foto.url }}" alt="Foto de {{ contato.get_full_name|default:contato.username }}" class="chat-header-avatar">
             {% else %}
-                <strong>{{ mensagem.autor.get_full_name|default:mensagem.autor.username }}</strong>
+                <span class="chat-header-avatar-placeholder">{{ contato.username|first|upper }}</span>
             {% endif %}
-            <p class="mb-1">{{ mensagem.texto|linebreaksbr }}</p>
-            <small class="text-muted">{{ mensagem.criada_em|date:"d/m/Y H:i" }}</small>
-        </div>
-    </div>
-    {% empty %}
-    <p class="text-muted mb-0">Ainda não há mensagens. Inicie a conversa.</p>
-    {% endfor %}
-</div>
-
-{% if solicitacao.status == 'confirmado' %}
-    <form id="message-form" method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {{ field.errors }}
+            <div class="chat-header-info">
+                <strong>{{ contato.get_full_name|default:contato.username }}{% if contato.profile.verificado %} {% include "_selo_verificado.html" %}{% endif %}</strong>
+                <small>{{ solicitacao.servico.nome }}{% if solicitacao.data_visita %} &middot; visita em {{ solicitacao.data_visita|date:"d/m/Y" }} &middot; {{ solicitacao.turno_curto }}{% endif %}{% if solicitacao.urgente %} &middot; URGENTE{% endif %}</small>
             </div>
-        {% endfor %}
-    </form>
-    {% if user == solicitacao.usuario %}
-        <form method="post" action="{% url 'services:concluir_solicitacao' solicitacao.pk %}" class="mt-3">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-lg w-100">Serviço concluído</button>
-        </form>
-    {% endif %}
-{% endif %}
+            <details class="chat-menu">
+                <summary aria-label="Mais opções">&#8942;</summary>
+                <div class="chat-menu-list">
+                    <a href="{% url 'accounts:denunciar' contato.pk %}?solicitacao={{ solicitacao.pk }}&amp;next={{ request.path|urlencode }}">Denunciar</a>
+                    {% if not bloqueado %}
+                    <form method="post" action="{% url 'accounts:bloquear' contato.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit">Bloquear</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </details>
+        </div>
+        {% if solicitacao.status == 'confirmado' %}
+            <div class="chat-visit-bar">
+                {% if a_caminho_aviso %}
+                    <span class="chat-oncoming">A caminho desde {{ a_caminho_aviso.a_caminho_em|date:"H:i" }}</span>
+                {% elif visita_hoje %}
+                    <form method="post" action="{% url 'services:estou_a_caminho' solicitacao.pk visita_hoje.chave %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-warning">Estou a caminho</button>
+                    </form>
+                {% endif %}
+                {% if visitas_agendadas and not proposta_pendente %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'services:reagendar' solicitacao.pk %}">Reagendar</a>
+                {% endif %}
+                {% if pode_cancelar %}
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'services:cancelar_solicitacao' solicitacao.pk %}">Cancelar</a>
+                {% endif %}
+            </div>
+            {% if proposta_pendente %}
+                <div class="chat-proposal">
+                    {% if proposta_pendente.proposto_por == user %}
+                        <span>Você pediu para mudar a visita de <strong>{{ proposta_pendente.data_anterior|date:"d/m" }}</strong> para <strong>{{ proposta_pendente.nova_data|date:"d/m" }}</strong> ({{ proposta_pendente.turno_novo_curto }}). Aguardando resposta.</span>
+                        <form method="post" action="{% url 'services:responder_reagendamento' proposta_pendente.pk 'cancelar' %}">{% csrf_token %}<button class="btn btn-sm btn-outline-secondary">Cancelar proposta</button></form>
+                    {% else %}
+                        <span>{{ proposta_pendente.proposto_por.get_full_name|default:proposta_pendente.proposto_por.username }} quer mudar a visita de <strong>{{ proposta_pendente.data_anterior|date:"d/m" }}</strong> para <strong>{{ proposta_pendente.nova_data|date:"d/m" }}</strong> ({{ proposta_pendente.turno_novo_curto }}){% if proposta_pendente.motivo %} - {{ proposta_pendente.motivo }}{% endif %}.</span>
+                        <span class="chat-proposal-buttons">
+                            <form method="post" action="{% url 'services:responder_reagendamento' proposta_pendente.pk 'aceitar' %}">{% csrf_token %}<button class="btn btn-sm btn-success">Aceitar</button></form>
+                            <form method="post" action="{% url 'services:responder_reagendamento' proposta_pendente.pk 'recusar' %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endif %}
+        {% if solicitacao.mensagem or solicitacao.anexos.all or solicitacao.tem_gps or solicitacao.endereco_visita %}
+            <details class="chat-request-info">
+                <summary>Ver detalhes do pedido{% if solicitacao.anexos.all %} ({{ solicitacao.anexos.all|length }} anexo{{ solicitacao.anexos.all|length|pluralize }}){% endif %}</summary>
+                {% include "services/_detalhes_pedido.html" with sol=solicitacao %}
+            </details>
+        {% endif %}
+
+        <div id="conversation-messages" class="chat-messages" data-novas-url="{% url 'services:mensagens_novas' solicitacao.pk %}" data-resumo-url="{% url 'services:conversas_resumo' %}" data-ativa="{{ solicitacao.pk }}">
+            {% regroup mensagens by criada_em|date:"d/m/Y" as grupos_mensagens %}
+            {% for grupo in grupos_mensagens %}
+                {% for mensagem in grupo.list %}
+                    {% if forloop.first %}{% include "services/_mensagem.html" with divisor_data=grupo.grouper %}{% else %}{% include "services/_mensagem.html" %}{% endif %}
+                {% endfor %}
+            {% empty %}
+                <p class="text-muted text-center mt-4">Ainda não há mensagens. Diga olá para {{ contato.get_full_name|default:contato.username }}!</p>
+            {% endfor %}
+        </div>
+
+        {% if solicitacao.status == 'confirmado' %}
+            {% if bloqueado %}
+                <div class="chat-blocked-note">🚫 Há um bloqueio entre vocês: não é possível enviar mensagens.</div>
+            {% else %}
+            <form id="message-form" method="post" enctype="multipart/form-data" class="chat-composer">
+                {% csrf_token %}
+                {{ form.non_field_errors }}{{ form.texto.errors }}{{ form.anexo.errors }}
+                <div class="chat-attach-preview" id="chat-attach-preview" hidden>
+                    <span id="chat-attach-nome"></span>
+                    <audio id="chat-attach-audio" controls hidden></audio>
+                    <button type="button" id="chat-attach-remover" class="chat-attach-x" aria-label="Remover anexo">&times;</button>
+                </div>
+                <div class="chat-input-bar">
+                    <label class="chat-tool" for="{{ form.anexo.id_for_label }}" title="Enviar foto">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </label>
+                    {{ form.anexo }}
+                    {{ form.texto }}
+                    <button type="button" class="chat-tool" id="chat-mic" title="Gravar áudio" aria-label="Gravar áudio">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                    </button>
+                    <button type="submit" class="btn-send" aria-label="Enviar mensagem">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path></svg>
+                    </button>
+                </div>
+                <div class="chat-rec-hint" id="chat-rec-hint" hidden>Gravando... toque no microfone de novo para parar.</div>
+            </form>
+            {% endif %}
+            {% if user == solicitacao.usuario %}
+                <div class="chat-conclude-bar">
+                    {% if solicitacao.visita_concluida_em %}
+                        <a href="{% url 'services:orcamento_detalhe' solicitacao.pk %}" class="btn btn-outline-success w-100">Ver orçamento da visita</a>
+                    {% else %}
+                        <p class="chat-conclude-hint">
+                            <span aria-hidden="true">💡</span>
+                            Aperte apenas quando o profissional for na sua casa.
+                        </p>
+                        <form method="post" action="{% url 'services:marcar_visita_concluida' solicitacao.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Visita concluída</button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% elif solicitacao.status == 'concluido' and user == solicitacao.usuario %}
+            <div class="chat-conclude-bar">
+                <a href="{% url 'services:orcamento_detalhe' solicitacao.pk %}" class="btn btn-outline-success w-100">Ver orçamento da visita</a>
+            </div>
+        {% endif %}
     </section>
 </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const conversation = document.getElementById('conversation-messages');
@@ -108,19 +159,36 @@
 
         const messageForm = document.getElementById('message-form');
         if (messageForm) {
-            messageForm.scrollIntoView({block: 'start'});
-            const messageField = messageForm.querySelector('textarea, input');
+            const messageField = messageForm.querySelector('textarea');
             if (messageField) {
                 messageField.focus();
+
+                // Cresce a caixa de texto conforme o cliente digita (como no
+                // WhatsApp), até um limite de altura definido no CSS.
+                messageField.addEventListener('input', function () {
+                    messageField.style.height = 'auto';
+                    messageField.style.height = messageField.scrollHeight + 'px';
+                });
+
+                // No celular a caixa fica mais estreita, então o texto de
+                // apoio (placeholder) encurta para "Digite..." em vez de
+                // "Digite uma mensagem..." (que no computador continua igual).
+                const placeholderComputador = messageField.getAttribute('placeholder');
+                const telaEstreita = window.matchMedia('(max-width: 768px)');
+                function ajustarPlaceholder() {
+                    messageField.placeholder = telaEstreita.matches ? 'Digite...' : placeholderComputador;
+                }
+                ajustarPlaceholder();
+                telaEstreita.addEventListener('change', ajustarPlaceholder);
             }
             messageForm.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter' && !event.shiftKey && event.target.matches('textarea, input')) {
                     event.preventDefault();
-                    messageForm.submit();
+                    if (messageForm.requestSubmit) { messageForm.requestSubmit(); } else { messageForm.submit(); }
                 }
             });
         }
     });
 </script>
-{% endif %}
+<script src="{% static 'js/chat.js' %}?v=2"></script>
 {% endblock %}

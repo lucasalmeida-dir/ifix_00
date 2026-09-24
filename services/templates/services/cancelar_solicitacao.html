@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Cancelar pedido{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h2 class="mb-1">Cancelar pedido</h2>
+        <p class="text-muted mb-3">{{ solicitacao.servico.nome }} &middot; com {{ contato.get_full_name|default:contato.username }}
+            {% if solicitacao.data_visita %}&middot; visita em {{ solicitacao.data_visita|date:"d/m/Y" }} ({{ solicitacao.turno_curto }}){% endif %}</p>
+
+        {% if avaliacao.pode %}
+            <div class="rule-box {% if avaliacao.tardio %}rule-box-warning{% endif %}">
+                <strong>{% if avaliacao.tardio %}Cancelamento tardio{% else %}O que acontece se você cancelar{% endif %}</strong>
+                <p class="mb-0">{{ avaliacao.consequencia }}</p>
+            </div>
+
+            <form method="post" class="mt-3">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.motivo.id_for_label }}">{{ form.motivo.label }}</label>
+                    {{ form.motivo }}
+                </div>
+                <button type="submit" class="btn btn-danger w-100">Confirmar cancelamento</button>
+                <a href="{% url 'services:mensagens' %}" class="btn btn-outline-secondary w-100 mt-2">Voltar sem cancelar</a>
+            </form>
+        {% else %}
+            <div class="rule-box rule-box-warning">
+                <strong>Não é possível cancelar por aqui</strong>
+                <p class="mb-0">{{ avaliacao.bloqueio }}</p>
+            </div>
+            <a href="{% url 'services:mensagens' %}" class="btn btn-outline-secondary w-100 mt-3">Voltar</a>
+        {% endif %}
+
+        <h3 class="h6 mt-4">Regras de cancelamento</h3>
+        <ul class="rule-list">
+            {% for regra in regras %}<li>{{ regra }}</li>{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

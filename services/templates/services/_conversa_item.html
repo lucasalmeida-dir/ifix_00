@@ -1,0 +1,28 @@
+{% now "Y-m-d" as hoje %}
+<a href="{% url 'services:conversa_solicitacao' conversa.pk %}" class="chat-list-item {% if conversa.pk == ativa_pk %}active{% endif %}{% if conversa.total_nao_lidas %} has-unread{% endif %}" data-conversa="{{ conversa.pk }}">
+    {% if conversa.contato.profile.foto %}
+        <img src="{{ conversa.contato.profile.foto.url }}" alt="Foto de {{ conversa.contato.get_full_name|default:conversa.contato.username }}" class="chat-list-avatar">
+    {% else %}
+        <span class="chat-list-avatar-placeholder">{{ conversa.contato.username|first|upper }}</span>
+    {% endif %}
+    <span class="chat-list-info">
+        <span class="chat-list-name-row">
+            <span class="chat-list-name">{{ conversa.contato.get_full_name|default:conversa.contato.username }}</span>
+            {% if conversa.ultima_mensagem %}
+                <span class="chat-list-time">{% if conversa.ultima_mensagem.criada_em|date:"Y-m-d" == hoje %}{{ conversa.ultima_mensagem.criada_em|date:"H:i" }}{% else %}{{ conversa.ultima_mensagem.criada_em|date:"d/m" }}{% endif %}</span>
+            {% endif %}
+        </span>
+        <span class="chat-list-preview-row">
+            <span class="chat-list-preview">
+                {% if conversa.ultima_mensagem %}
+                    {% if conversa.ultima_mensagem.autor_id == user.id %}<span class="chat-list-ticks{% if conversa.ultima_mensagem.lida %} is-read{% endif %}" aria-label="{% if conversa.ultima_mensagem.lida %}Lida{% else %}Enviada{% endif %}">{% if conversa.ultima_mensagem.lida %}&#10003;&#10003;{% else %}&#10003;{% endif %}</span> {% endif %}{{ conversa.ultima_mensagem.resumo|truncatechars:34 }}
+                {% else %}
+                    {{ conversa.servico.nome }}
+                {% endif %}
+            </span>
+            {% if conversa.total_nao_lidas %}
+                <span class="chat-list-badge">{{ conversa.total_nao_lidas }}</span>
+            {% endif %}
+        </span>
+    </span>
+</a>

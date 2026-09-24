@@ -1,0 +1,202 @@
+{% extends "base_auth.html" %}
+{% block title %}Orçamento &middot; {{ solicitacao.servico.nome }}{% endblock %}
+{% block content %}
+{% if solicitacao.status == 'concluido' and user == solicitacao.usuario %}
+    <div class="service-done-overlay" id="service-done-overlay" {% if avaliacao and outros_orcamentos_pendentes %}data-auto-redirect="{% url 'services:orcamentos_lista' %}"{% endif %}>
+        <div class="service-done-card">
+            <span class="service-done-check" aria-hidden="true">✔</span>
+            <h1 class="service-done-title">SERVIÇO CONCLUÍDO</h1>
+            <p class="service-done-subtitle">{{ solicitacao.servico.nome }} &middot; {{ solicitacao.servico.profissional.get_full_name|default:solicitacao.servico.profissional.username }}</p>
+
+            {% if avaliacao %}
+                <hr>
+                <h3>Sua avaliação</h3>
+                <div class="rating-result" aria-label="{{ avaliacao.estrelas }} de 5 estrelas">{{ avaliacao.get_estrelas_display }}</div>
+                {% if avaliacao.comentario %}<p class="mb-0">{{ avaliacao.comentario|linebreaksbr }}</p>{% endif %}
+                {% if outros_orcamentos_pendentes %}
+                    <p class="service-done-redirect-hint">Voltando para seus outros orçamentos pendentes&hellip;</p>
+                {% endif %}
+            {% else %}
+                <hr>
+                <h3>Avalie o profissional</h3>
+                <form method="post" action="{% url 'services:avaliar_solicitacao' solicitacao.pk %}" class="evaluation-form text-start mx-auto">
+                    {% csrf_token %}
+                    <fieldset class="mb-3">
+                        <legend class="fs-6">{{ avaliacao_form.estrelas.label }}</legend>
+                        <div class="star-rating" role="radiogroup" aria-label="{{ avaliacao_form.estrelas.label }}">
+                            {% for value, label in avaliacao_form.estrelas.field.choices %}
+                                <input type="radio" name="estrelas" value="{{ value }}" id="star-{{ value }}" required>
+                                <label for="star-{{ value }}" title="{{ value }} estrela{{ value|pluralize }}">&#9733;</label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_comentario">{{ avaliacao_form.comentario.label }}</label>
+                        {{ avaliacao_form.comentario }}
+                    </div>
+                    <button type="submit" class="btn btn-primary d-block mx-auto">Enviar avaliação</button>
+                </form>
+            {% endif %}
+
+            <a href="{% url 'services:conversa_solicitacao' solicitacao.pk %}" class="service-done-back-link">Voltar às mensagens</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var overlay = document.getElementById('service-done-overlay');
+            if (overlay && overlay.dataset.autoRedirect) {
+                setTimeout(function () {
+                    window.location.href = overlay.dataset.autoRedirect;
+                }, 4000);
+            }
+        });
+    </script>
+{% else %}
+<div class="blob-stage">
+    <a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+<div class="row justify-content-center w-100">
+    <div class="col-lg-7">
+    <div class="blob-stage-card">
+        <div class="d-flex justify-content-center justify-content-md-between align-items-center text-center text-md-start mb-3">
+            <h2 class="mb-0">Orçamento da visita</h2>
+            <a href="{% url 'services:conversa_solicitacao' solicitacao.pk %}" class="btn btn-outline-secondary btn-sm orcamento-back-btn d-none d-md-inline-flex">Voltar às mensagens</a>
+        </div>
+
+        <p class="text-muted mb-4 text-center text-md-start">
+            {{ solicitacao.servico.nome }}
+            {% if user == solicitacao.servico.profissional %}
+                &middot; cliente {{ solicitacao.usuario.get_full_name|default:solicitacao.usuario.username }}
+            {% else %}
+                &middot;  {{ solicitacao.servico.profissional.get_full_name|default:solicitacao.servico.profissional.username }}
+            {% endif %}
+        </p>
+
+        {% if orcamento %}
+            <div class="budget-card mb-4">
+                <span class="budget-card-label">Valor do orçamento</span>
+                <strong class="budget-card-value">R$ {{ orcamento.valor }}</strong>
+                <span class="budget-status budget-status-{{ orcamento.status }}">{{ orcamento.get_status_display }}</span>
+
+                {% if dias_visita %}
+                    <div class="budget-visits">
+                        <span class="budget-visits-label">
+                            {% if dias_visita|length == 1 %}1 visita necessária{% else %}{{ dias_visita|length }} visitas necessárias{% endif %}
+                        </span>
+                        <div class="budget-visits-chips">
+                            {% for dia in dias_visita %}
+                                <span class="badge-distancia">📅 {{ dia.data|date:"d/m/Y" }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if orcamento.observacoes %}
+                    <div class="budget-card-observacoes">
+                        <span class="budget-card-observacoes-label">📝 Observações do profissional</span>
+                        <p class="mb-0">{{ orcamento.observacoes|linebreaksbr }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="budget-empty-state mb-4">
+                <span class="chat-empty-icon">🧾</span>
+                <div>
+                    <strong class="d-block mb-1">Aguardando o orçamento</strong>
+                    <span class="text-muted">
+                        {% if user == solicitacao.servico.profissional %}
+                            Depois de visitar o cliente, adicione aqui o valor real e os dias de visita.
+                        {% else %}
+                            O profissional envia o valor real do serviço por aqui depois da primeira visita.
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if orcamento and solicitacao.status == 'confirmado' %}
+            {% if orcamento.status == 'pendente' %}
+                {% if user == solicitacao.usuario %}
+                    <div class="rule-box mb-3">
+                        <strong>Você aceita este orçamento?</strong>
+                        <p class="mb-2 rule-box-approve-hint">Ao aprovar, as visitas previstas entram na sua agenda automaticamente{% if pix_habilitado %} e você poderá pagar por Pix, com o valor retido até o serviço ser concluído{% endif %}.</p>
+                        <form method="post" action="{% url 'services:orcamento_responder' solicitacao.pk 'aprovar' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Aprovar orçamento</button>
+                        </form>
+                        <details class="mt-2">
+                            <summary class="btn btn-danger btn-sm summary-btn w-100">Recusar orçamento</summary>
+                            <form method="post" action="{% url 'services:orcamento_responder' solicitacao.pk 'recusar' %}" class="mt-2">
+                                {% csrf_token %}
+                                <textarea name="motivo" class="form-control mb-2" rows="2" maxlength="500" placeholder="Motivo (opcional) - ex.: valor acima do esperado"></textarea>
+                                <button type="submit" class="btn btn-outline-danger w-100">Recusar</button>
+                            </form>
+                        </details>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aguardando o cliente aprovar ou recusar este orçamento.</p>
+                {% endif %}
+            {% elif orcamento.status == 'recusado' %}
+                <div class="rule-box rule-box-warning mb-3">
+                    <strong>Orçamento recusado</strong>
+                    <p class="mb-0">{% if orcamento.motivo_recusa %}Motivo: {{ orcamento.motivo_recusa }}{% else %}O cliente não informou o motivo.{% endif %}
+                    {% if user == solicitacao.servico.profissional %} Ajuste o valor e envie uma nova proposta.{% else %} O profissional pode enviar uma nova proposta.{% endif %}</p>
+                </div>
+            {% elif orcamento.status == 'aprovado' %}
+                {% if visitas_agendadas %}
+                    <div class="agenda-box mb-3">
+                        <strong>Visitas agendadas</strong>
+                        <ul class="agenda-list">
+                            {% for v in visitas_agendadas %}
+                                <li>
+                                    <span>{{ v.rotulo }}{% if v.a_caminho_em and v.data == hoje_data %} &middot; a caminho{% endif %}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'services:reagendar' solicitacao.pk %}">Reagendar uma visita</a>
+                    </div>
+                {% endif %}
+
+                {% if pix_habilitado %}
+                    <div class="pay-box mb-3">
+                        {% if pagamento %}
+                            <span>Pagamento: <strong>{{ pagamento.get_status_display }}</strong></span>
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'services:pagamento_detalhe' solicitacao.pk %}">Ver pagamento</a>
+                        {% elif user == solicitacao.usuario %}
+                            <span>Pague por Pix dentro do app. O valor fica retido e só vai para o profissional quando você concluir o serviço.</span>
+                            <form method="post" action="{% url 'services:pagamento_iniciar' solicitacao.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-success w-100">Pagar R$ {{ orcamento.valor }} com Pix</button>
+                            </form>
+                        {% else %}
+                            <span>Aguardando o cliente pagar por Pix.</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+
+        {% if user == solicitacao.servico.profissional and solicitacao.status == 'confirmado' and not pagamento %}
+            <a href="{% url 'services:orcamento_editar' solicitacao.pk %}" class="btn btn-primary w-100 mb-3">
+                {% if orcamento %}Editar orçamento{% else %}Adicionar orçamento{% endif %}
+            </a>
+        {% endif %}
+
+        {% if user == solicitacao.usuario %}
+            <p class="chat-conclude-hint">
+                <span aria-hidden="true">💡</span>
+                Aperte apenas quando o serviço estiver todo finalizado.
+            </p>
+            <form method="post" action="{% url 'services:concluir_solicitacao' solicitacao.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success w-100">Serviço concluído</button>
+            </form>
+        {% endif %}
+    </div>
+    </div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

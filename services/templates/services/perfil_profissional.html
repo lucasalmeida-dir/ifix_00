@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ seo_titulo }}{% endblock %}
+{% block meta_description %}{{ seo_descricao }}{% endblock %}
+{% block og_title %}{{ seo_titulo }}{% endblock %}
+{% block og_description %}{{ seo_descricao }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="public-profile-head">
+            <div class="public-profile-photo">
+                {% if perfil.foto %}
+                    <img src="{{ perfil.foto.url }}" alt="Foto de {{ nome_profissional }}">
+                {% else %}
+                    <span>{{ profissional.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="h2 mb-1">{{ nome_profissional }} {% if perfil.verificado %}{% include "_selo_verificado.html" %}{% endif %}</h1>
+                {% if perfil.especialidades_texto %}<p class="mb-1 text-muted">{{ perfil.especialidades_texto }}{% if cidade %} &middot; {{ cidade }}{% endif %}</p>{% endif %}
+                <div class="professional-rating">
+                    {% if total_avaliacoes %}
+                        <span class="rating-stars">{{ estrelas }}</span>
+                        <span class="rating-score">{{ media|floatformat:1 }}/5 ({{ total_avaliacoes }} avaliaç{{ total_avaliacoes|pluralize:"ão,ões" }})</span>
+                    {% else %}
+                        <span class="rating-score">Ainda sem avaliações</span>
+                    {% endif %}
+                </div>
+                {% if perfil.site_url %}
+                    <p class="mt-2 mb-0"><a href="{{ perfil.site_url }}" target="_blank" rel="noopener noreferrer nofollow ugc" class="btn btn-outline-primary btn-sm">🔗 Visitar a página de {{ nome_profissional }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-3">{% include "_painel_verificacao.html" with perfil_verif=perfil %}</div>
+
+        <div class="public-profile-stats">
+            <div class="public-profile-stat">
+                <strong>{% if tempo_resposta %}{{ tempo_resposta }}{% else %}Ainda sem dados{% endif %}</strong>
+                <small>Tempo de resposta</small>
+            </div>
+            <div class="public-profile-stat">
+                <strong>{{ concluidos }}</strong>
+                <small>Serviço{{ concluidos|pluralize }} concluído{{ concluidos|pluralize }} no IFIX</small>
+            </div>
+            <div class="public-profile-stat">
+                <strong>{{ profissional.date_joined|date:"m/Y" }}</strong>
+                <small>No IFIX desde</small>
+            </div>
+            <div class="public-profile-stat">
+                <strong>{% if perfil.verificado %}Identidade conferida{% else %}Não verificado{% endif %}</strong>
+                <small>Verificação</small>
+            </div>
+        </div>
+
+        <section class="public-profile-reviews">
+        <h2 class="h5 mb-3">Avaliações de clientes</h2>
+        {% if avaliacoes %}
+            <div class="review-list">
+                {% for avaliacao in avaliacoes %}
+                    <div class="review-item">
+                        <div class="review-item-head">
+                            <span class="rating-stars">{{ avaliacao.get_estrelas_display }}</span>
+                            <strong>{{ avaliacao.usuario.get_full_name|default:avaliacao.usuario.username }}</strong>
+                            <span class="text-muted small">{{ avaliacao.criado_em|date:"d/m/Y" }}</span>
+                        </div>
+                        {% if avaliacao.comentario %}<p class="mb-2">{{ avaliacao.comentario }}</p>{% endif %}
+                        {% if avaliacao.respondida %}
+                            <div class="review-resposta">
+                                <strong>Resposta de {{ nome_profissional }}</strong>
+                                {% if avaliacao.resposta_profissional %}<p class="mb-2">{{ avaliacao.resposta_profissional }}</p>{% endif %}
+                                {% if avaliacao.foto_resposta %}
+                                    <a href="{{ avaliacao.foto_resposta.url }}" target="_blank" rel="noopener"><img class="review-resposta-foto" loading="lazy" src="{{ avaliacao.foto_resposta.url }}" alt="Foto do serviço concluído"></a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">Este profissional ainda não recebeu avaliações.</p>
+        {% endif %}
+        </section>
+
+        {% if user.is_authenticated and not eh_o_proprio %}
+            <div class="profile-safety-links">
+                <a href="{% url 'accounts:denunciar' profissional.pk %}?next={{ request.path|urlencode }}" class="btn btn-outline-danger btn-sm">🚩 Denunciar este perfil</a>
+                <form method="post" action="{% url 'accounts:bloquear' profissional.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Bloquear este profissional</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

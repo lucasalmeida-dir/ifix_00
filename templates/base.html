@@ -2,18 +2,34 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "_head_common.html" %}
     <title>{% block title %}IFIX{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}IFIX conecta você a eletricistas, encanadores, marceneiros e pintores avaliados perto de casa. Compare o preço da visita, agende pelo celular e feche o serviço com segurança.{% endblock %}">
+    <meta name="robots" content="{% block robots %}index,follow,max-image-preview:large{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}">
+    <meta property="og:site_name" content="IFIX">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}IFIX - Encontre eletricista, encanador, marceneiro e pintor{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Compare preços, veja avaliações e agende a visita de profissionais perto de você.{% endblock %}">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'css/img/logo.png' %}">
+    <meta name="twitter:card" content="summary">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'css/style.css' %}?v=3" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}?v=80" rel="stylesheet">
+    {% if json_ld %}<script type="application/ld+json">{{ json_ld }}</script>{% endif %}
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% if request.resolver_match %}has-bottom-nav{% endif %}">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{% url 'home' %}">🔧 IFIX</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+        {% include "_sino.html" %}
+        <button class="navbar-toggler position-relative" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
             <span class="navbar-toggler-icon"></span>
+            {% with total_notificacoes=total_mensagens_nao_lidas|add:total_orcamentos_novos|add:total_solicitacoes_pendentes %}
+                <span class="badge text-bg-danger navbar-toggler-badge" data-live="toggler" {% if not total_notificacoes %}hidden{% endif %}>{{ total_notificacoes }}</span>
+            {% endwith %}
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
@@ -22,19 +38,30 @@
                 </li>
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link {% if '/servicos/mensagens/' in request.path or '/servicos/solicitacao/' in request.path %}active{% endif %}" href="{% url 'services:mensagens' %}">
-                            Mensagens{% if total_mensagens_nao_lidas %} <span class="badge text-bg-danger">{{ total_mensagens_nao_lidas }}</span>{% endif %}
+                        <a class="nav-link {% if '/servicos/mensagens/' in request.path or '/conversa/' in request.path %}active{% endif %}" href="{% url 'services:mensagens' %}">
+                            Mensagens <span class="badge text-bg-danger" data-live="mensagens" {% if not total_mensagens_nao_lidas %}hidden{% endif %}>{{ total_mensagens_nao_lidas }}</span>
                         </a>
                     </li>
+                    {% if tem_orcamentos_visiveis %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'orcamentos_lista' or request.resolver_match.url_name == 'orcamento_detalhe' or request.resolver_match.url_name == 'orcamento_editar' %}active{% endif %}" href="{% url 'services:orcamentos_lista' %}">
+                                Orçamentos <span class="badge text-bg-danger" data-live="orcamentos" {% if not total_orcamentos_novos %}hidden{% endif %}>{{ total_orcamentos_novos }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endif %}
                 {% if user.is_authenticated and user.profile.is_usuario %}
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'minhas_solicitacoes' %}active{% endif %}" href="{% url 'services:minhas_solicitacoes' %}">Minhas solicitações</a></li>
+                    {% if tem_favoritos %}
+                        <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'favoritos_lista' %}active{% endif %}" href="{% url 'services:favoritos_lista' %}">Favoritos</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'mapa_profissionais' %}active{% endif %}" href="{% url 'services:mapa_profissionais' %}">Profissionais perto de você</a></li>
                 {% endif %}
                 {% if user.is_authenticated and user.profile.is_profissional %}
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'meus_servicos' or request.resolver_match.url_name == 'servico_criar' or request.resolver_match.url_name == 'servico_editar' %}active{% endif %}" href="{% url 'services:meus_servicos' %}">Meus serviços</a></li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'solicitacoes_recebidas' or request.resolver_match.url_name == 'atualizar_status_solicitacao' %}active{% endif %}" href="{% url 'services:solicitacoes_recebidas' %}">
-                            Solicitações recebidas{% if total_solicitacoes_pendentes %} <span class="badge text-bg-danger">{{ total_solicitacoes_pendentes }}</span>{% endif %}
+                            Solicitações recebidas <span class="badge text-bg-danger" data-live="solicitacoes" {% if not total_solicitacoes_pendentes %}hidden{% endif %}>{{ total_solicitacoes_pendentes }}</span>
                         </a>
                     </li>
                 {% endif %}
@@ -65,52 +92,31 @@
 </nav>
 
 <div class="container mb-5">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
+    {% include "_messages.html" %}
 
     {% block content %}{% endblock %}
 </div>
 
 <footer class="text-center text-muted py-4 border-top">
-    <small>IFIX</small>
+    <nav aria-label="Categorias de serviço" class="mb-2">
+        {% for cat in categorias_rodape %}<a class="text-muted mx-2" href="{{ cat.get_absolute_url }}">{{ cat.nome }}</a>{% endfor %}
+        <a class="text-muted mx-2" href="{% url 'services:servico_list' %}">Todos os serviços</a>
+    </nav>
+    <nav aria-label="Informações legais" class="mb-2 small">
+        <a class="text-muted mx-2" href="{% url 'privacidade' %}">Política de Privacidade</a>
+        <a class="text-muted mx-2" href="{% url 'termos_clientes' %}">Termos de Uso</a>
+        <a class="text-muted mx-2" href="#" data-cookie-config>Preferências de cookies</a>
+    </nav>
+    <small>&copy; IFIX &middot; Profissionais de confiança perto de você</small>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Adiciona o botão "olhinho" de mostrar/ocultar senha em TODOS os
-    // campos de senha do site (login, cadastro, redefinição de senha etc.),
-    // sem precisar alterar cada template individualmente.
-    document.addEventListener('DOMContentLoaded', function () {
-        var eyeOpenIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-        var eyeClosedIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-3.22 4.44"></path><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+{% include "_bottom_nav.html" %}
+{% include "_cookie_banner.html" %}
 
-        document.querySelectorAll('input[type="password"]').forEach(function (input) {
-            var wrapper = document.createElement('div');
-            wrapper.className = 'password-field-wrapper';
-            input.parentNode.insertBefore(wrapper, input);
-            wrapper.appendChild(input);
-
-            var toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.className = 'password-toggle-btn';
-            toggleBtn.setAttribute('aria-label', 'Mostrar senha');
-            toggleBtn.innerHTML = eyeOpenIcon;
-            wrapper.appendChild(toggleBtn);
-
-            toggleBtn.addEventListener('click', function () {
-                var estaOculta = input.type === 'password';
-                input.type = estaOculta ? 'text' : 'password';
-                toggleBtn.innerHTML = estaOculta ? eyeClosedIcon : eyeOpenIcon;
-                toggleBtn.setAttribute('aria-label', estaOculta ? 'Ocultar senha' : 'Mostrar senha');
-            });
-        });
-    });
-</script>
+<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/password-toggle.js' %}"></script>
+<script src="{% static 'js/ios-toast.js' %}"></script>
+<script src="{% static 'js/app-ui.js' %}?v=1"></script>
+{% if user.is_authenticated %}<script src="{% static 'js/live.js' %}?v=1"></script>{% endif %}
 </body>
 </html>

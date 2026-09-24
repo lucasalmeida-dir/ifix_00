@@ -1,0 +1,7 @@
+{% if google_login_habilitado %}
+    <div id="google-signin-btn" class="google-signin-btn" data-client-id="{{ google_client_id }}" data-next="{{ request.GET.next|default:'' }}"></div>
+{% else %}
+    <button type="button" class="auth-social-btn" disabled title="Login com Google ainda não configurado neste site">
+        <span class="auth-social-icon">G</span> Continuar com Google <span class="auth-social-soon">Em breve</span>
+    </button>
+{% endif %}

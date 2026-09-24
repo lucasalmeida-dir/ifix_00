@@ -1,67 +1,140 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
 {% block title %}Solicitações recebidas{% endblock %}
 {% block content %}
-<h2 class="mb-4">Solicitações recebidas</h2>
-<div class="table-responsive">
-    <table class="table table-striped bg-white align-middle">
-        <thead>
-            <tr>
-                <th>Serviço</th>
-                <th>Solicitante</th>
-                <th>Contato</th>
-                <th>Distância</th>
-                <th>Mensagem</th>
-                <th>Status</th>
-                <th>Data</th>
-                <th>Ação</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in solicitacoes %}
-            <tr>
-                <td>{{ s.servico.nome }}</td>
-                <td>
-                    <strong>{{ s.usuario.get_full_name|default:s.usuario.username }}</strong>
-                    <br><small class="text-muted">{{ s.usuario.email|default:"E-mail não informado" }}</small>
-                </td>
-                <td>{{ s.usuario.profile.telefone|default:"Não informado" }}</td>
-                <td>
-                    {% if s.distancia_km is not None %}
-                        <span class="badge text-bg-secondary">📍 {{ s.distancia_km|floatformat:1 }} km</span>
-                    {% elif not profissional_tem_localizacao %}
-                        <small class="text-muted">Cadastre seu CEP para ver a distância</small>
-                    {% else %}
-                        <small class="text-muted">Distância indisponível</small>
-                    {% endif %}
-                </td>
-                <td class="small text-muted">{{ s.mensagem|default:"-"|truncatewords:15 }}</td>
-                <td><span class="badge text-bg-secondary">{{ s.get_status_display }}</span></td>
-                <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
-                <td>
-                    {% if s.status == 'pendente' %}
-                    <div class="d-flex gap-1">
-                        <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'aceitar' %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm">Aceitar</button>
-                        </form>
-                        <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'recusar' %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Recusar</button>
-                        </form>
-                    </div>
-                    {% else %}
-                        {% if s.status == 'confirmado' %}
-                        <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary btn-sm">Conversar</a>
-                        {% else %}
-                        <span class="text-muted">Finalizada</span>
-                        {% endif %}
-                    {% endif %}
+<div class="blob-stage">
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="blob-stage-card w-100" style="max-width: 1140px;">
+    <div class="d-none d-md-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Solicitações recebidas</h2>
+        <a href="{% url 'home' %}" class="blob-stage-brand-inline">🔧 IFIX</a>
+    </div>
+
+    <div class="requests-banner d-md-none">
+        <span class="requests-banner-icon" aria-hidden="true">📋</span>
+        <h2 class="requests-banner-title">Solicitações<br><span>recebidas</span></h2>
+        <a href="{% url 'home' %}" class="requests-banner-brand">🔧 IFIX</a>
+    </div>
+
+    <!-- Tabela (computador) -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-striped bg-white align-middle services-table">
+            <thead>
+                <tr>
+                    <th>Serviço</th>
+                    <th>Solicitante</th>
+                    <th>Contato</th>
+                    <th>Distância</th>
+                    <th>Dia da visita</th>
+                    <th>Solicitado em</th>
+                    <th class="text-end">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in solicitacoes %}
+                <tr{% if s.urgente %} class="request-urgent-row"{% endif %}>
+                    <td>{{ s.servico.nome }}{% if s.urgente %}<div><span class="badge text-bg-danger">⚡ Urgente</span></div>{% endif %}</td>
+                    <td>
+                        <strong>{{ s.usuario.get_full_name|default:s.usuario.username }}</strong>
+                        <br><small class="text-muted">{{ s.usuario.email|default:"E-mail não informado" }}</small>
                     </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="8" class="text-muted">Nenhuma solicitação recebida ainda.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <td>{{ s.usuario.profile.telefone|default:"Não informado" }}</td>
+                    <td>
+                        {% if s.distancia_km is not None %}
+                            <span class="badge text-bg-secondary">📍 {{ s.distancia_km|floatformat:1 }} km</span>
+                        {% elif not profissional_tem_localizacao %}
+                            <small class="text-muted">Cadastre seu CEP para ver a distância</small>
+                        {% else %}
+                            <small class="text-muted">Distância indisponível</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.data_visita %}
+                            <div class="request-date-cell">
+                                <span class="badge text-bg-secondary">📅 {{ s.data_visita|date:"d/m/Y" }}</span>
+                                <div class="request-meta">{{ s.turno_curto }}</div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1">
+                            <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'aceitar' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm">Aceitar</button>
+                            </form>
+                            <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'recusar' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Recusar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% if s.mensagem or s.anexos.all or s.tem_gps or s.endereco_visita %}
+                <tr class="request-details-row">
+                    <td colspan="7">
+                        {% include "services/_detalhes_pedido.html" with sol=s %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% empty %}
+                <tr><td colspan="7" class="text-muted">Nenhuma solicitação pendente no momento.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cards (celular) -->
+    <div class="requests-card-list d-md-none">
+        {% for s in solicitacoes %}
+            <article class="request-card{% if s.urgente %} is-urgent{% endif %}">
+                <div class="request-card-head">
+                    <span class="request-card-icon" aria-hidden="true">{{ s.servico.categoria.icone|default:"🔧" }}</span>
+                    <span class="request-card-categoria">{{ s.servico.categoria.nome }}</span>
+                    {% if s.urgente %}<span class="badge text-bg-danger ms-auto">⚡ Urgente</span>{% endif %}
+                </div>
+                <h3 class="request-card-nome">{{ s.usuario.get_full_name|default:s.usuario.username }}</h3>
+
+                <div class="request-card-row">
+                    <span class="request-card-chip"><span class="request-card-chip-icon">📞</span>{{ s.usuario.profile.telefone|default:"Não informado" }}</span>
+                    {% if s.distancia_km is not None %}
+                        <span class="request-card-chip"><span class="request-card-chip-icon">📍</span>{{ s.distancia_km|floatformat:1 }} km</span>
+                    {% endif %}
+                </div>
+
+                <div class="request-card-row">
+                    {% if s.data_visita %}
+                        <span class="request-card-chip"><span class="request-card-chip-icon">📅</span>{{ s.data_visita|date:"d/m/Y" }}<small>{{ s.turno_curto }}</small></span>
+                    {% endif %}
+                    <span class="request-card-chip"><span class="request-card-chip-icon">🕒</span>Solicitado em<small>{{ s.criado_em|date:"d/m/Y H:i" }}</small></span>
+                </div>
+
+                {% if s.endereco_visita %}
+                    <div class="request-card-endereco"><span aria-hidden="true">📍</span> <strong>Endereço:</strong> {{ s.endereco_visita }}</div>
+                {% endif %}
+                {% if s.mensagem or s.anexos.all or s.tem_gps %}
+                    <div class="request-card-detalhes">
+                        {% include "services/_detalhes_pedido.html" with sol=s %}
+                    </div>
+                {% endif %}
+
+                <div class="request-card-actions">
+                    <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'aceitar' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">✓ Aceitar</button>
+                    </form>
+                    <form method="post" action="{% url 'services:atualizar_status_solicitacao' s.pk 'recusar' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">✕ Recusar</button>
+                    </form>
+                </div>
+            </article>
+        {% empty %}
+            <p class="text-muted">Nenhuma solicitação pendente no momento.</p>
+        {% endfor %}
+    </div>
+    </div>
 </div>
 {% endblock %}

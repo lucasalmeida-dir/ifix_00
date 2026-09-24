@@ -35,6 +35,20 @@
             {% endfor %}
             <button type="submit" class="btn btn-primary w-100">Salvar alterações</button>
         </form>
+
+        <div class="profile-account-links">
+            <a href="{% url 'accounts:excluir_conta' %}" class="btn btn-outline-danger w-100">Excluir minha conta</a>
+            <a href="{% url 'privacidade' %}" class="btn btn-link">Política de Privacidade</a>
+        </div>
+
+        {% if profile.is_profissional %}
+        <div class="profile-safety-links">
+            <a href="{% url 'accounts:verificacao' %}" class="btn btn-outline-primary">
+                {% if profile.verificacao_status == 'verificado' %}✔ Verificado{% elif profile.verificacao_status == 'pendente' %}⏳ Verificação em análise{% else %}🛡️ Pedir selo de profissional verificado{% endif %}
+            </a>
+            <a href="{% url 'services:perfil_profissional' user.pk %}" class="btn btn-outline-secondary">Ver minha página pública</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 <script>

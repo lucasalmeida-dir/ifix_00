@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}IFIX - Início{% endblock %}
+{% block title %}IFIX - Eletricista, encanador, marceneiro e pintor perto de você{% endblock %}
+{% block og_title %}IFIX - Eletricista, encanador, marceneiro e pintor perto de você{% endblock %}
 
 {% block content %}
 
@@ -55,6 +56,20 @@
 
     .hero-split .actions-col h1 {
         color: var(--color-gold-light);
+    }
+
+    /* Só a frase do painel do profissional ("Cadastre todos os seus
+       serviços no site") precisa desse ajuste - a do cliente/visitante
+       continua exatamente como sempre foi, em qualquer tamanho de tela.
+       No computador, a logo divide a largura com o texto (lado a lado),
+       então essa frase precisa de uma fonte que se ajuste a esse espaço
+       menor para não estourar o card; no celular a imagem fica em cima e
+       o texto tem a largura toda, então não precisa reduzir. */
+    @media (min-width: 769px) {
+        .hero-split .actions-col h1.hero-title-profissional {
+            white-space: nowrap;
+            font-size: clamp(0.95rem, 1.6vw, 1.75rem);
+        }
     }
 
     .hero-split .actions-col p.lead {
@@ -122,6 +137,13 @@
         padding-right: 0.4rem;
     }
 
+    /* Cards de "O que você precisa hoje?" (cliente logado): fundo branco
+       normal, mas com o título e o texto em dourado. */
+    .client-action-cards .card-title,
+    .client-action-cards .card-text {
+        color: var(--color-gold-dark);
+    }
+
     @media (max-width: 768px) {
         .hero-split {
             flex-direction: column;
@@ -161,10 +183,32 @@
     }
 
     @media (max-width: 576px) {
+        /* No celular as frases não ficam mais numa fila pra arrastar:
+           elas se revezam sozinhas, uma de cada vez, com um fade suave
+           (ver o JS logo abaixo da trust-bar no HTML). */
         .trust-bar {
-            justify-content: flex-start;
-            overflow-x: auto;
+            position: relative;
+            justify-content: center;
+            overflow: hidden;
             flex-wrap: nowrap;
+            height: 3rem;
+            padding: 0;
+        }
+
+        .trust-item {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .trust-item.is-active {
+            opacity: 1;
+            pointer-events: auto;
         }
     }
 
@@ -380,18 +424,48 @@
     }
 
     /* ---------- Depoimentos ---------- */
+    /* Mesmo carrossel horizontal com "encaixe" por card (scroll-snap) usado
+       no celular, só que agora também no computador - em vez de uma grade
+       estática de 3 colunas, os depoimentos deslizam do mesmo jeito em
+       qualquer tamanho de tela. */
     .testimonial-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0 -1rem;
+        padding: 0.25rem 1rem 0.75rem;
         gap: 1.25rem;
     }
 
+    .testimonial-grid::-webkit-scrollbar {
+        display: none;
+    }
+
     .testimonial-card {
+        display: block;
+        flex: 0 0 32%;
+        max-width: 32%;
+        scroll-snap-align: center;
         background-color: #ffffff;
         border: 1px solid rgba(20, 49, 92, 0.12);
         border-radius: 1rem;
         padding: 1.5rem;
         text-align: center;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.6rem 1.2rem rgba(10, 37, 64, 0.12);
+        border-color: var(--color-gold);
+        color: inherit;
     }
 
     .testimonial-stars {
@@ -413,10 +487,51 @@
         font-size: 0.85rem;
     }
 
+    @media (max-width: 992px) {
+        .testimonial-card {
+            flex: 0 0 45%;
+            max-width: 45%;
+            gap: 0.85rem;
+        }
+    }
+
     @media (max-width: 768px) {
         .testimonial-grid {
-            grid-template-columns: 1fr;
+            gap: 0.85rem;
         }
+
+        .testimonial-card {
+            flex: 0 0 82%;
+            max-width: 82%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .testimonial-card {
+            flex: 0 0 88%;
+            max-width: 88%;
+        }
+    }
+
+    .testimonial-dots {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+    }
+
+    .testimonial-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: rgba(20, 49, 92, 0.2);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .testimonial-dot.is-active {
+        background-color: var(--color-blue);
+        transform: scale(1.5);
     }
 
     /* ---------- Newsletter ---------- */
@@ -492,12 +607,33 @@
 </style>
 
 <!-- ============ TRUST BAR ============ -->
-<div class="trust-bar mb-4">
-    <div class="trust-item"><span class="trust-icon">✓</span> Profissionais verificados</div>
+<div class="trust-bar mb-4" id="trust-bar">
+    <div class="trust-item is-active"><span class="trust-icon">✓</span> Profissionais verificados</div>
     <div class="trust-item"><span class="trust-icon">★</span> Avaliações reais de clientes</div>
     <div class="trust-item"><span class="trust-icon">⚡</span> Resposta rápida por chat</div>
     <div class="trust-item"><span class="trust-icon">🛡</span> Você acompanha tudo pelo site</div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // No celular (ver CSS), essas frases não ficam mais numa fila pra
+        // arrastar - elas revezam sozinhas, uma de cada vez. Em telas
+        // maiores o CSS mostra todas juntas, então essa troca de classe
+        // não tem efeito visual nenhum ali.
+        var trustBar = document.getElementById('trust-bar');
+        if (!trustBar) return;
+
+        var itens = Array.prototype.slice.call(trustBar.querySelectorAll('.trust-item'));
+        if (itens.length < 2) return;
+
+        var indiceAtual = 0;
+        setInterval(function () {
+            itens[indiceAtual].classList.remove('is-active');
+            indiceAtual = (indiceAtual + 1) % itens.length;
+            itens[indiceAtual].classList.add('is-active');
+        }, 2800);
+    });
+</script>
 
 <!-- ============ HERO ============ -->
 <div class="hero-split mb-5">
@@ -506,7 +642,7 @@
     </div>
 
     <div class="actions-col">
-        <h1 class="fw-bold">Encontre o profissional certo para o seu problema</h1>
+        <h1 class="fw-bold{% if user.is_authenticated and user.profile.is_profissional %} hero-title-profissional{% endif %}">{% if user.is_authenticated and user.profile.is_profissional %}Cadastre todos os seus serviços no site{% else %}Encontre o profissional certo para o seu problema{% endif %}</h1>
         <p class="lead">Hidráulica, elétrica, marcenaria, pintura e muito mais — tudo em um só lugar.</p>
 
         <div class="action-panel mt-4">
@@ -539,13 +675,13 @@
                 </div>
             {% elif user.profile.is_usuario %}
                 <p class="action-panel-greeting"> O que você precisa hoje?</p>
-                <div class="row g-2">
+                <div class="row g-2 client-action-cards">
                     <div class="col-lg-3 col-sm-6">
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <div class="panel-card-icon"></div>
                                 <h5 class="card-title">Visualizar serviços</h5>
-                                <p class="card-text text-muted small">Explore profissionais disponíveis por categoria.</p>
+                                <p class="card-text small">Explore profissionais disponíveis por categoria.</p>
                                 <div class="card-buttons">
                                     <a href="{% url 'services:servico_list' %}" class="btn btn-outline-primary w-100">Explorar</a>
                                 </div>
@@ -557,7 +693,7 @@
                             <div class="card-body">
                                 <div class="panel-card-icon"></div>
                                 <h5 class="card-title">Minhas solicitações</h5>
-                                <p class="card-text text-muted small">Acompanhe o andamento dos seus pedidos.</p>
+                                <p class="card-text small">Acompanhe o andamento dos seus pedidos.</p>
                                 <div class="card-buttons">
                                     <a href="{% url 'services:minhas_solicitacoes' %}" class="btn btn-outline-primary w-100">Ver solicitações</a>
                                 </div>
@@ -569,7 +705,7 @@
                             <div class="card-body">
                                 <div class="panel-card-icon"></div>
                                 <h5 class="card-title">Mensagens</h5>
-                                <p class="card-text text-muted small">Converse com os profissionais que você contatou.</p>
+                                <p class="card-text small">Converse com os profissionais que você contatou.</p>
                                 <div class="card-buttons">
                                     <a href="{% url 'services:mensagens' %}" class="btn btn-outline-primary w-100">Abrir mensagens</a>
                                 </div>
@@ -581,7 +717,7 @@
                             <div class="card-body">
                                 <div class="panel-card-icon"></div>
                                 <h5 class="card-title">Editar perfil</h5>
-                                <p class="card-text text-muted small">Mantenha seus dados e endereço atualizados.</p>
+                                <p class="card-text small">Mantenha seus dados e endereço atualizados.</p>
                                 <div class="card-buttons">
                                     <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-secondary w-100">Editar</a>
                                 </div>
@@ -656,22 +792,22 @@
         <a class="section-link" href="{% url 'services:servico_list' %}">Ver todos os serviços →</a>
     </div>
     <div class="category-grid">
-        <a class="category-card" href="{% url 'services:servico_list' %}?q=Encanador">
+        <a class="category-card" href="{% url 'services:servico_categoria' 'hidraulica' %}">
             <div class="category-icon">🚰</div>
             <h3>Hidráulica</h3>
             <p>Encanadores para consertos, desentupimento e instalações.</p>
         </a>
-        <a class="category-card" href="{% url 'services:servico_list' %}?q=Eletricista">
+        <a class="category-card" href="{% url 'services:servico_categoria' 'eletrica' %}">
             <div class="category-icon">⚡</div>
             <h3>Elétrica</h3>
             <p>Instalações, manutenção e energia solar.</p>
         </a>
-        <a class="category-card" href="{% url 'services:servico_list' %}?q=Marceneiro">
+        <a class="category-card" href="{% url 'services:servico_categoria' 'marcenaria' %}">
             <div class="category-icon">🪚</div>
             <h3>Marcenaria</h3>
             <p>Móveis planejados, reparos e restauração.</p>
         </a>
-        <a class="category-card" href="{% url 'services:servico_list' %}?q=Pintor">
+        <a class="category-card" href="{% url 'services:servico_categoria' 'pintura' %}">
             <div class="category-icon">🎨</div>
             <h3>Pintura</h3>
             <p>Pintura residencial, de móveis e acabamentos.</p>
@@ -762,30 +898,73 @@
     </div>
 </section>
 
+{% if depoimentos %}
 <!-- ============ DEPOIMENTOS ============ -->
 <section class="home-section">
     <div class="section-head section-head-center">
         <div class="section-kicker">DEPOIMENTOS</div>
         <h2>Quem usa, recomenda</h2>
     </div>
-    <div class="testimonial-grid">
-        <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Consegui um encanador no mesmo dia e acompanhei tudo pelo chat, sem complicação.”</blockquote>
-            <cite>Cliente do IFIX</cite>
-        </div>
-        <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Desde que cadastrei meus serviços, recebo pedidos direto da minha região.”</blockquote>
-            <cite>Profissional parceiro</cite>
-        </div>
-        <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Gostei de poder ver as avaliações antes de escolher quem chamar.”</blockquote>
-            <cite>Cliente do IFIX</cite>
-        </div>
+    <div class="testimonial-grid" id="testimonial-grid">
+        {% for depoimento in depoimentos %}
+            <a href="{% url 'services:servico_detail' depoimento.solicitacao.servico.slug %}" class="testimonial-card">
+                <div class="testimonial-stars">{{ depoimento.get_estrelas_display }}</div>
+                <blockquote>“{{ depoimento.comentario }}”</blockquote>
+                <cite>{{ depoimento.usuario.get_full_name|default:depoimento.usuario.username }} avaliou {{ depoimento.profissional.get_full_name|default:depoimento.profissional.username }}</cite>
+            </a>
+        {% endfor %}
     </div>
+    {% if depoimentos|length > 1 %}
+        <div class="testimonial-dots" id="testimonial-dots" aria-hidden="true">
+            {% for depoimento in depoimentos %}
+                <span class="testimonial-dot"></span>
+            {% endfor %}
+        </div>
+    {% endif %}
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Mesmo comportamento dos cards de "Ver serviços": no celular os
+        // depoimentos viram um carrossel horizontal, e esses pontinhos
+        // acompanham qual card está visível no momento.
+        var grid = document.getElementById('testimonial-grid');
+        var dotsContainer = document.getElementById('testimonial-dots');
+        if (!grid || !dotsContainer || !window.IntersectionObserver) {
+            return;
+        }
+
+        var cards = Array.prototype.filter.call(grid.children, function (el) {
+            return el.classList.contains('testimonial-card');
+        });
+        var dots = Array.prototype.slice.call(dotsContainer.children);
+        if (!cards.length || cards.length !== dots.length) {
+            return;
+        }
+
+        function marcarAtivo(indice) {
+            dots.forEach(function (dot, i) {
+                dot.classList.toggle('is-active', i === indice);
+            });
+        }
+        marcarAtivo(0);
+
+        var observer = new IntersectionObserver(function (entries) {
+            var maisVisivel = null;
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting && (!maisVisivel || entry.intersectionRatio > maisVisivel.intersectionRatio)) {
+                    maisVisivel = entry;
+                }
+            });
+            if (maisVisivel) {
+                marcarAtivo(cards.indexOf(maisVisivel.target));
+            }
+        }, { root: grid, threshold: [0.5, 0.75, 0.9] });
+
+        cards.forEach(function (card) { observer.observe(card); });
+    });
+</script>
+{% endif %}
 
 <!-- ============ NEWSLETTER ============ -->
 <section class="newsletter-section">

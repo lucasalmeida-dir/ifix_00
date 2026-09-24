@@ -1,0 +1,89 @@
+{% extends "base_auth.html" %}
+{% block title %}Adicionar vários serviços{% endblock %}
+{% block content %}
+<div class="blob-stage">
+    <a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="row justify-content-center w-100">
+    <div class="col-md-6">
+    <div class="blob-stage-card">
+        <h2 class="mb-1">Adicionar vários serviços de uma vez</h2>
+        <p class="text-muted">
+            Escolha a categoria e o Serviço (grupo) - um card é criado automaticamente para
+            <strong>cada subserviço</strong> desse grupo, todos com o mesmo preço e duração.
+            Você pode ajustar cada um individualmente depois, em "Meus serviços".
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                <div class="mb-3{% if field.name == 'preco_min' or field.name == 'preco_max' %} address-detail-field{% endif %}">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field.errors }}
+                    <div>{{ field }}</div>
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-success w-100">Criar cards para esse Serviço</button>
+        </form>
+        <p class="mt-3 text-center">
+            <a href="{% url 'services:servico_criar' %}">Prefiro adicionar um serviço por vez</a>
+        </p>
+    </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var categoriaSelect = document.getElementById('id_categoria');
+        var servicoSelect = document.getElementById('id_servico');
+
+        if (!categoriaSelect || !servicoSelect) {
+            return;
+        }
+
+        function slugDaCategoriaSelecionada() {
+            var opcao = categoriaSelect.options[categoriaSelect.selectedIndex];
+            return opcao ? opcao.getAttribute('data-slug') : null;
+        }
+
+        function filtrarServicos(manterValorAtual) {
+            var slug = slugDaCategoriaSelecionada();
+            var valorAtual = servicoSelect.value;
+
+            Array.prototype.forEach.call(servicoSelect.options, function (opcao) {
+                if (!opcao.value) {
+                    opcao.hidden = false;
+                    opcao.disabled = false;
+                    return;
+                }
+                var pertence = !slug || opcao.getAttribute('data-categoria') === slug;
+                opcao.hidden = !pertence;
+                opcao.disabled = !pertence;
+            });
+
+            if (manterValorAtual && valorAtual) {
+                var opcaoAtual = null;
+                Array.prototype.forEach.call(servicoSelect.options, function (opcao) {
+                    if (opcao.value === valorAtual) {
+                        opcaoAtual = opcao;
+                    }
+                });
+                if (opcaoAtual && !opcaoAtual.hidden) {
+                    servicoSelect.value = valorAtual;
+                    return;
+                }
+            }
+
+            servicoSelect.value = '';
+        }
+
+        categoriaSelect.addEventListener('change', function () {
+            filtrarServicos(false);
+        });
+
+        filtrarServicos(true);
+    });
+</script>
+{% endblock %}

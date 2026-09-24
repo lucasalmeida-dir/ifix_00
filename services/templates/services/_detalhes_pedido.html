@@ -1,0 +1,12 @@
+<div class="request-details">
+    {% if sol.mensagem %}<span class="request-details-text">&ldquo;{{ sol.mensagem|striptags|linebreaksbr }}&rdquo;</span>{% endif %}
+    {% for anexo in sol.anexos.all %}
+        {% if anexo.is_video %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ anexo.arquivo.url }}" target="_blank" rel="noopener">Visualizar vídeo</a>
+        {% else %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ anexo.arquivo.url }}" target="_blank" rel="noopener">Visualizar imagem</a>
+        {% endif %}
+    {% endfor %}
+    {% if sol.endereco_visita %}<span class="request-details-line"><strong>Endereço:</strong> {{ sol.endereco_visita }}</span>{% endif %}
+    {% if sol.tem_gps %}<a class="btn btn-sm btn-outline-primary" href="{{ sol.mapa_url }}" target="_blank" rel="noopener">Abrir localização no mapa</a>{% endif %}
+</div>

@@ -1,0 +1,33 @@
+{% comment %}Aviso de cookies (LGPD). A escolha fica no navegador (localStorage, chave ifix_cookies) e, por não haver cookie de rastreamento próprio, só recursos de terceiros (ex.: login com Google) dependem dela.{% endcomment %}
+<div class="cookie-banner" id="cookie-banner" role="dialog" aria-live="polite" aria-label="Aviso de cookies" hidden>
+    <p class="cookie-banner-text">
+        🍪 Usamos cookies essenciais para o site funcionar e, com a sua permissão, recursos de terceiros (como o login com Google).
+        Veja a <a href="{% url 'privacidade' %}">Política de Privacidade</a>.
+    </p>
+    <div class="cookie-banner-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-cookie-escolha="necessarios">Só os necessários</button>
+        <button type="button" class="btn btn-sm btn-primary" data-cookie-escolha="todos">Aceitar todos</button>
+    </div>
+</div>
+<script>
+    (function () {
+        var banner = document.getElementById('cookie-banner');
+        if (!banner) { return; }
+        var CHAVE = 'ifix_cookies';
+        function ler() { try { return localStorage.getItem(CHAVE); } catch (e) { return null; } }
+        function gravar(valor) { try { localStorage.setItem(CHAVE, valor); } catch (e) {} }
+        if (!ler()) { banner.hidden = false; }
+        banner.addEventListener('click', function (evento) {
+            var botao = evento.target.closest('[data-cookie-escolha]');
+            if (!botao) { return; }
+            gravar(botao.getAttribute('data-cookie-escolha'));
+            banner.hidden = true;
+        });
+        document.addEventListener('click', function (evento) {
+            if (evento.target.closest('[data-cookie-config]')) {
+                evento.preventDefault();
+                banner.hidden = false;
+            }
+        });
+    })();
+</script>

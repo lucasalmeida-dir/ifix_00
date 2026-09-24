@@ -7,6 +7,7 @@ Estrutura baseada no diagrama:
 - Área do Profissional (cadastro, editar dados, opções de serviços/categorias)
 """
 import os
+from decimal import Decimal
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
 
     # Apps do projeto
     'accounts',
@@ -33,12 +35,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.EspecialidadeObrigatoriaMiddleware',
+    'accounts.middleware.TermosAceiteMiddleware',
 ]
 
 ROOT_URLCONF = 'IFIX.urls'
@@ -55,6 +60,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'services.context_processors.notificacoes_mensagens',
+                'accounts.context_processors.google_login',
             ],
         },
     },
@@ -99,3 +105,57 @@ LOGOUT_REDIRECT_URL = 'home'
 # são exibidos no console em vez de enviados de verdade.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'naoresponda@ifix.local'
+
+
+# ---------------------------------------------------------------------------
+# Regras de cancelamento / reagendamento (ver services/regras.py)
+# ---------------------------------------------------------------------------
+IFIX_CANCELAMENTO_ANTECEDENCIA_HORAS = 24
+IFIX_REAGENDAMENTO_ANTECEDENCIA_HORAS = 12
+IFIX_REAGENDAMENTO_MAX = 2
+
+# ---------------------------------------------------------------------------
+# Pagamento por Pix com retenção (ver services/pagamentos/)
+#
+# Enquanto o IFIX não tiver CNPJ e conta em um provedor (Asaas / Mercado
+# Pago), o Pix fica DESLIGADO: nenhuma tela de pagamento aparece e o fluxo
+# de orçamento segue como sempre. Para ligar depois:
+#   1) IFIX_PIX_HABILITADO=1
+#   2) IFIX_PIX_PROVEDOR=asaas   (ou mercadopago)
+#   3) preencher as chaves do provedor abaixo (variáveis de ambiente)
+#   4) implementar os TODO em services/pagamentos/asaas.py (ou mercadopago.py)
+# Com IFIX_PIX_PROVEDOR=simulado (padrão) dá para testar todo o fluxo em
+# modo DEBUG, com um botão de "simular pagamento".
+# ---------------------------------------------------------------------------
+PIX_HABILITADO = os.environ.get('IFIX_PIX_HABILITADO', '0') == '1'
+PIX_PROVEDOR = os.environ.get('IFIX_PIX_PROVEDOR', 'simulado')
+PIX_EXPIRACAO_MINUTOS = int(os.environ.get('IFIX_PIX_EXPIRACAO_MINUTOS', '30'))
+IFIX_COMISSAO_PERCENTUAL = Decimal(os.environ.get('IFIX_COMISSAO_PERCENTUAL', '10'))
+
+ASAAS_API_KEY = os.environ.get('ASAAS_API_KEY', '')
+ASAAS_BASE_URL = os.environ.get('ASAAS_BASE_URL', 'https://sandbox.asaas.com/api/v3')
+ASAAS_WEBHOOK_TOKEN = os.environ.get('ASAAS_WEBHOOK_TOKEN', '')
+
+MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
+MERCADOPAGO_WEBHOOK_SECRET = os.environ.get('MERCADOPAGO_WEBHOOK_SECRET', '')
+
+# ---------------------------------------------------------------------------
+# Login rápido com Google (Sign In With Google)
+#
+# Fica DESLIGADO (o botão continua "Em breve") até você criar um Client ID:
+#   1) console.cloud.google.com -> criar projeto -> "APIs e serviços" ->
+#      "Credenciais" -> "Criar credenciais" -> "ID do cliente OAuth" ->
+#      tipo "Aplicativo da Web".
+#   2) Em "Origens JavaScript autorizadas", adicione o domínio do site
+#      (ex.: https://ifix.com.br e, para testar local, http://localhost:8000).
+#   3) Defina a variável de ambiente GOOGLE_OAUTH_CLIENT_ID com o Client ID
+#      gerado (algo como "123...apps.googleusercontent.com").
+# Não precisa de client secret nem de biblioteca nova: o token que o Google
+# devolve é conferido chamando a própria API do Google (ver
+# accounts/services.py -> verificar_id_token_google).
+#
+# O WhatsApp não oferece um "Entrar com WhatsApp" equivalente ao do Google
+# (não existe OAuth de identidade pelo WhatsApp) - por isso esse botão
+# continua marcado "Em breve" e não foi implementado.
+# ---------------------------------------------------------------------------
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')

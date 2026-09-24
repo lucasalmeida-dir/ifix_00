@@ -1,0 +1,93 @@
+{% load static %}
+<form method="post" enctype="multipart/form-data" id="form-solicitar-visita" data-max-anexos="{{ max_anexos }}" data-hoje="{{ hoje_iso }}">
+    {% csrf_token %}
+    {% for s in servicos %}{% if servicos|length > 1 %}<input type="hidden" name="s" value="{{ s.pk }}">{% endif %}{% endfor %}
+    {{ form.data_visita }}
+    {{ form.latitude }}
+    {{ form.longitude }}
+    <div class="visually-hidden">{{ form.urgente }}</div>
+
+    <button type="button" class="urgent-toggle" id="btn-urgente" aria-pressed="false">
+        <span class="urgent-toggle-icon" aria-hidden="true">⚡</span>
+        <span>
+            <strong>Urgente / hoje</strong>
+            <small>Preciso de atendimento ainda hoje. O pedido chega em destaque.</small>
+        </span>
+    </button>
+
+    <h3 class="request-step">1. Escolha o dia</h3>
+    <div class="visit-calendar">
+        <div class="visit-calendar-header">
+            <button type="button" class="visit-calendar-nav visit-calendar-nav-disabled" id="cal-prev" aria-label="Mês anterior" disabled>&laquo;</button>
+            <strong id="cal-titulo">{{ meses.0.nome }} de {{ meses.0.ano }}</strong>
+            <button type="button" class="visit-calendar-nav" id="cal-next" aria-label="Próximo mês">&raquo;</button>
+        </div>
+
+        <div class="visit-calendar-weekdays">
+            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+        </div>
+
+        {% for mes in meses %}
+            <div class="visit-calendar-grid visit-calendar-month" data-titulo="{{ mes.nome }} de {{ mes.ano }}" {% if not forloop.first %}hidden{% endif %}>
+                {% for semana in mes.semanas %}
+                    {% for dia in semana %}
+                        <button
+                            type="button"
+                            class="visit-calendar-day{% if not dia.no_mes %} is-outside{% endif %}{% if dia.hoje %} is-today{% endif %}"
+                            data-data="{{ dia.data|date:'Y-m-d' }}"
+                            {% if not dia.selecionavel %}disabled{% endif %}
+                        >{{ dia.data|date:'j' }}</button>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if form.data_visita.errors %}
+        <div class="alert alert-danger mt-3">{{ form.data_visita.errors.0 }}</div>
+    {% endif %}
+    <p class="mt-3 mb-3">
+        Dia selecionado: <strong id="data-visita-selecionada">nenhum</strong>
+    </p>
+
+    <h3 class="request-step">2. Melhor horário</h3>
+    <div class="turno-chips" role="radiogroup" aria-label="Melhor horário">
+        {% for radio in form.turno %}
+            <label class="turno-chip">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+        {% endfor %}
+    </div>
+
+    <h3 class="request-step">3. Conte o que está acontecendo <span class="request-optional">(opcional)</span></h3>
+    <div class="mb-3">
+        {{ form.mensagem }}
+        {{ form.mensagem.errors }}
+    </div>
+
+    <div class="mb-3">
+        <label class="attach-drop" for="{{ form.anexos.id_for_label }}">
+            <span class="attach-drop-icon" aria-hidden="true">📷</span>
+            <span><strong>Adicionar fotos ou vídeo do problema</strong><small>{{ form.anexos.help_text }}</small></span>
+        </label>
+        {{ form.anexos }}
+        <div class="attach-previews" id="attach-previews"></div>
+        <div class="text-danger small" id="attach-erro" role="alert"></div>
+        {{ form.anexos.errors }}
+    </div>
+
+    <h3 class="request-step">4. Onde vai ser a visita</h3>
+    <div class="gps-box mb-2">
+        <button type="button" class="btn btn-outline-primary w-100" id="btn-gps">📍 Usar minha localização atual (GPS)</button>
+        <div class="gps-status small" id="gps-status" role="status">
+            {% if form.latitude.value %}Localização do celular anexada ao pedido.{% else %}Opcional: o profissional recebe um botão para abrir o mapa no seu local exato.{% endif %}
+        </div>
+    </div>
+    <div class="mb-4">
+        <label class="form-label" for="{{ form.endereco_visita.id_for_label }}">{{ form.endereco_visita.label }}</label>
+        {{ form.endereco_visita }}
+        {{ form.endereco_visita.errors }}
+    </div>
+
+    {{ form.non_field_errors }}
+    <button type="submit" class="btn btn-primary btn-lg w-100" id="btn-confirmar-visita" disabled>{{ texto_botao|default:"Confirmar solicitação de visita" }}</button>
+</form>
+<script src="{% static 'js/solicitar.js' %}?v=1"></script>

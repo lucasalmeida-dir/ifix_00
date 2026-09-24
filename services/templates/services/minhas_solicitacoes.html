@@ -1,37 +1,111 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
 {% block title %}Minhas solicitações{% endblock %}
 {% block content %}
-<h2 class="mb-4">Minhas solicitações</h2>
-<div class="table-responsive">
-    <table class="table table-striped bg-white">
-        <thead>
-            <tr>
-                <th>Serviço</th>
-                <th>Profissional</th>
-                <th>Status</th>
-                <th>Data</th>
-                <th>Conversa</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in solicitacoes %}
-            <tr>
-                <td>{{ s.servico.nome }}</td>
-                <td>{{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}</td>
-                <td><span class="badge text-bg-secondary">{{ s.get_status_display }}</span></td>
-                <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
-                <td>
-                    {% if s.status == 'confirmado' %}
-                    <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary btn-sm">Conversar</a>
-                    {% else %}
-                    <span class="text-muted">Disponível após aceite</span>
+<div class="blob-stage">
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="blob-stage-card w-100" style="max-width: 1140px;">
+    <div class="d-none d-md-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Minhas solicitações</h2>
+        <a href="{% url 'home' %}" class="blob-stage-brand-inline">🔧 IFIX</a>
+    </div>
+
+    <div class="requests-banner d-md-none">
+        <span class="requests-banner-icon" aria-hidden="true">🧾</span>
+        <h2 class="requests-banner-title">Minhas<br><span>solicitações</span></h2>
+        <a href="{% url 'home' %}" class="requests-banner-brand">🔧 IFIX</a>
+    </div>
+
+    <!-- Tabela (computador) -->
+    <div class="table-responsive d-none d-md-block">
+        <table class="table table-striped bg-white services-table">
+            <thead>
+                <tr>
+                    <th>Serviço</th>
+                    <th>Profissional</th>
+                    <th>Dia da visita</th>
+                    <th>Status</th>
+                    <th>Solicitado em</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in solicitacoes %}
+                <tr>
+                    <td>{{ s.servico.nome }}</td>
+                    <td>{{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}</td>
+                    <td>
+                        {% if s.data_visita %}
+                            <div class="request-date-cell">
+                            <span class="badge text-bg-secondary">📅 {{ s.data_visita|date:"d/m/Y" }}</span>
+                            {% if s.urgente or s.anexos.all %}<div class="request-meta">{% if s.urgente %}<span class="badge text-bg-danger">Urgente</span>{% endif %}{% if s.anexos.all %}{% if s.urgente %} &middot; {% endif %}📷 {{ s.anexos.all|length }}{% endif %}</div>{% endif %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge {% if s.status == 'confirmado' %}badge-verde{% else %}text-bg-secondary{% endif %}">{{ s.get_status_display }}</span></td>
+                    <td>{{ s.criado_em|date:"d/m/Y H:i" }}</td>
+                    <td class="text-end">
+                        <div class="request-table-actions">
+                            {% if s.status == 'confirmado' %}
+                            <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary btn-sm">Conversar</a>
+                            {% else %}
+                            <span class="text-muted">Esperando resposta...</span>
+                            {% endif %}
+                            <a class="btn btn-danger btn-sm" href="{% url 'services:cancelar_solicitacao' s.pk %}">Cancelar</a>
+                            {% if s.grupo %}<a class="btn btn-secondary btn-sm" href="{% url 'services:comparar_pedido' s.grupo %}">Comparar respostas</a>{% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-muted">Você ainda não solicitou nenhum serviço.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Cards (celular) -->
+    <div class="requests-card-list d-md-none">
+        {% for s in solicitacoes %}
+            <article class="request-card{% if s.urgente %} is-urgent{% endif %}">
+                <div class="request-card-head request-card-head-inline">
+                    <span class="request-card-icon" aria-hidden="true">{{ s.servico.categoria.icone|default:"🔧" }}</span>
+                    <span class="request-card-categoria">{{ s.servico.categoria.nome }}</span>
+                    <span class="badge {% if s.status == 'confirmado' %}badge-verde{% else %}text-bg-secondary{% endif %}">{{ s.get_status_display }}</span>
+                </div>
+                <h3 class="request-card-nome">{{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}</h3>
+
+                <div class="request-card-row">
+                    {% if s.data_visita %}
+                        <span class="request-card-chip"><span class="request-card-chip-icon">📅</span>{{ s.data_visita|date:"d/m/Y" }}</span>
                     {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" class="text-muted">Você ainda não solicitou nenhum serviço.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <span class="request-card-chip"><span class="request-card-chip-icon">🕒</span>Solicitado em<small>{{ s.criado_em|date:"d/m/Y H:i" }}</small></span>
+                    {% if s.urgente %}<span class="badge text-bg-danger">⚡ Urgente</span>{% endif %}
+                </div>
+
+                {% if s.mensagem or s.anexos.all or s.tem_gps or s.endereco_visita %}
+                    <div class="request-card-detalhes">
+                        {% include "services/_detalhes_pedido.html" with sol=s %}
+                    </div>
+                {% endif %}
+
+                <div class="d-grid gap-2 mb-2">
+                    {% if s.status == 'confirmado' %}
+                        <a href="{% url 'services:conversa_solicitacao' s.pk %}" class="btn btn-primary">Conversar</a>
+                    {% else %}
+                        <span class="text-muted small text-center">Esperando resposta...</span>
+                    {% endif %}
+                </div>
+                <div class="request-card-btn-row">
+                    <a class="btn btn-danger btn-sm" href="{% url 'services:cancelar_solicitacao' s.pk %}">Cancelar</a>
+                    {% if s.grupo %}<a class="btn btn-secondary btn-sm" href="{% url 'services:comparar_pedido' s.grupo %}">Comparar respostas</a>{% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <p class="text-muted">Você ainda não solicitou nenhum serviço.</p>
+        {% endfor %}
+    </div>
+    </div>
 </div>
 {% endblock %}

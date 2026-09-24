@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Cadastro profissional{% endblock %}
+{% block title %}Cadastro de profissional | IFIX{% endblock %}
+{% block meta_description %}Seja um profissional IFIX: cadastre seus serviços de elétrica, hidráulica, marcenaria ou pintura e receba pedidos de visita de clientes perto de você.{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
         <h2 class="mb-1">Cadastro profissional</h2>
         <p class="text-muted">Crie sua conta para oferecer serviços na plataforma.</p>
-        <p class="required-fields-hint">Todos os campos são obrigatórios.</p>
+        <p class="required-fields-hint">Campos com <span class="required-field-marker">*</span> são obrigatórios. Número, complemento e foto podem ser preenchidos depois.</p>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% for field in form %}

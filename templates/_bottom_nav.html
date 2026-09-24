@@ -1,0 +1,69 @@
+{% comment %}Barra de navegação fixa no rodapé, no estilo de aplicativo. Só aparece no celular/tablet (CSS).{% endcomment %}
+<nav class="bottom-nav" aria-label="Navegação principal">
+    {% if user.is_authenticated %}
+        {% with nome=request.resolver_match.url_name %}
+        {% if user.profile.is_profissional %}
+            <a class="bottom-nav-item {% if nome == 'meus_servicos' or nome == 'servico_criar' or nome == 'servico_editar' or nome == 'servico_criar_em_lote' %}is-active{% endif %}" href="{% url 'services:meus_servicos' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span>Meus serviços</span>
+            </a>
+        {% else %}
+            <a class="bottom-nav-item {% if nome == 'servico_list' or nome == 'servico_categoria' or nome == 'servico_detail' or nome == 'servico_solicitar' or nome == 'solicitar_varios' or nome == 'mapa_profissionais' %}is-active{% endif %}" href="{% url 'services:servico_list' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Serviços</span>
+            </a>
+        {% endif %}
+
+        <a class="bottom-nav-item {% if '/servicos/mensagens/' in request.path or '/conversa/' in request.path %}is-active{% endif %}" href="{% url 'services:mensagens' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Mensagens</span>
+            <b class="bottom-nav-badge" data-live="mensagens" {% if not total_mensagens_nao_lidas %}hidden{% endif %}>{{ total_mensagens_nao_lidas }}</b>
+        </a>
+
+        <a class="bottom-nav-item {% if nome == 'orcamentos_lista' or nome == 'orcamento_detalhe' or nome == 'orcamento_editar' %}is-active{% endif %}" href="{% url 'services:orcamentos_lista' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+            <span>Orçamentos</span>
+            <b class="bottom-nav-badge" data-live="orcamentos" {% if not total_orcamentos_novos %}hidden{% endif %}>{{ total_orcamentos_novos }}</b>
+        </a>
+
+        {% if user.profile.is_profissional %}
+            <a class="bottom-nav-item {% if nome == 'solicitacoes_recebidas' or nome == 'atualizar_status_solicitacao' %}is-active{% endif %}" href="{% url 'services:solicitacoes_recebidas' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                <span>Solicitações</span>
+                <b class="bottom-nav-badge" data-live="solicitacoes" {% if not total_solicitacoes_pendentes %}hidden{% endif %}>{{ total_solicitacoes_pendentes }}</b>
+            </a>
+        {% else %}
+            <a class="bottom-nav-item {% if nome == 'minhas_solicitacoes' or nome == 'comparar_pedido' %}is-active{% endif %}" href="{% url 'services:minhas_solicitacoes' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                <span>Solicitações</span>
+            </a>
+        {% endif %}
+
+        <a class="bottom-nav-item {% if nome == 'profile_edit' %}is-active{% endif %}" href="{% url 'accounts:profile_edit' %}">
+            {% if user.profile.foto %}
+                <img class="bottom-nav-avatar" src="{{ user.profile.foto.url }}" alt="">
+            {% else %}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {% endif %}
+            <span>Conta</span>
+        </a>
+        {% endwith %}
+    {% else %}
+        <a class="bottom-nav-item {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Início</span>
+        </a>
+        <a class="bottom-nav-item {% if request.resolver_match.url_name == 'servico_list' or request.resolver_match.url_name == 'servico_categoria' %}is-active{% endif %}" href="{% url 'services:servico_list' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Serviços</span>
+        </a>
+        <a class="bottom-nav-item {% if request.resolver_match.url_name == 'login' %}is-active{% endif %}" href="{% url 'accounts:login' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span>Entrar</span>
+        </a>
+        <a class="bottom-nav-item {% if request.resolver_match.url_name == 'register_user' or request.resolver_match.url_name == 'register_professional' %}is-active{% endif %}" href="{% url 'accounts:register_user' %}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span>Cadastrar</span>
+        </a>
+    {% endif %}
+</nav>

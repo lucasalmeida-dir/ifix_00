@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Pedir para vários profissionais{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h2 class="mb-1">Pedir para {{ servicos|length }} profissionais</h2>
+        <p class="text-muted mb-3">Você preenche uma vez só. Cada profissional recebe o mesmo pedido e responde separado - depois você compara e escolhe.</p>
+        <ul class="multi-pro-list">
+            {% for s in servicos %}
+                <li>
+                    <strong>{{ s.profissional.get_full_name|default:s.profissional.username }}</strong>
+                    <span class="text-muted">{{ s.nome }} &middot; {{ s.faixa_preco }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+        {% include "services/_solicitar_campos.html" with texto_botao="Enviar pedido para todos" %}
+    </div>
+</div>
+{% endblock %}

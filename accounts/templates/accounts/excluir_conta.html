@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Excluir minha conta{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <h2 class="mb-1">Excluir minha conta</h2>
+        <p class="text-muted">Direito previsto na LGPD (Lei 13.709/2018, art. 18). Esta ação é <strong>definitiva</strong>.</p>
+        <div class="trust-card trust-card-danger mb-4">
+            <p class="mb-2"><strong>O que acontece:</strong></p>
+            <ul class="mb-0">
+                <li>Seu perfil, fotos, documentos, mensagens, pedidos e avaliações são apagados.</li>
+                <li>Se você é profissional, seus serviços saem do ar.</li>
+                <li>Registros que a lei obriga a guardar (como pagamentos) permanecem, sem identificar você.</li>
+                <li>Você será desconectado(a) e não poderá mais entrar com esta conta.</li>
+            </ul>
+        </div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if tem_senha %}
+                <div class="mb-3">
+                    <label class="form-label" for="senha">Digite sua senha para confirmar</label>
+                    <input type="password" name="senha" id="senha" class="form-control" autocomplete="current-password" required>
+                </div>
+            {% else %}
+                <div class="mb-3">
+                    <label class="form-label" for="confirmacao">Digite EXCLUIR para confirmar</label>
+                    <input type="text" name="confirmacao" id="confirmacao" class="form-control" autocomplete="off" required>
+                </div>
+            {% endif %}
+            {% if erro %}<div class="alert alert-danger">{{ erro }}</div>{% endif %}
+            <button type="submit" class="btn btn-danger w-100">Excluir minha conta definitivamente</button>
+        </form>
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-secondary w-100 mt-3">Cancelar</a>
+    </div>
+</div>
+{% endblock %}

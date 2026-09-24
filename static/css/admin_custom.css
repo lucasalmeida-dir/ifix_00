@@ -1,0 +1,89 @@
+/* =========================================================
+   Tema do admin do Django com a paleta do IFIX (azul e dourado),
+   para o site e o /admin/ terem a mesma identidade visual.
+   As variáveis seguem os mesmos nomes usados pelo base.css/
+   dark_mode.css do Django, então funcionam nos dois temas
+   (claro e escuro) sem quebrar o restante do admin.
+   ========================================================= */
+:root,
+html[data-theme="light"] {
+    --primary: #14315c;
+    --secondary: #0a2540;
+    --accent: #d4af37;
+    --primary-fg: #fff;
+
+    --header-color: #d4af37;
+    --header-branding-color: #d4af37;
+    --header-bg: #0a2540;
+    --header-link-color: #f1d98b;
+
+    --breadcrumbs-fg: #cfd8e3;
+    --breadcrumbs-link-fg: #fff;
+    --breadcrumbs-bg: #14315c;
+
+    --link-fg: #14315c;
+    --link-hover-color: #1f4a86;
+    --link-selected-fg: #a9821f;
+
+    --button-bg: #14315c;
+    --button-hover-bg: #1f4a86;
+    --default-button-bg: #d4af37;
+    --default-button-hover-bg: #c9a02c;
+
+    --object-tools-bg: #14315c;
+    --object-tools-hover-bg: #1f4a86;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary: #1f4a86;
+        --header-bg: #0a2540;
+        --header-color: #d4af37;
+        --link-fg: #6fa8dc;
+        --link-hover-color: #9fc5e8;
+        --default-button-bg: #d4af37;
+        --default-button-hover-bg: #c9a02c;
+    }
+}
+
+html[data-theme="dark"] {
+    --primary: #1f4a86;
+    --header-bg: #0a2540;
+    --header-color: #d4af37;
+    --link-fg: #6fa8dc;
+    --link-hover-color: #9fc5e8;
+    --default-button-bg: #d4af37;
+    --default-button-hover-bg: #c9a02c;
+}
+
+/* Cabeçalho com o mesmo degradê azul + friso dourado do site */
+#header {
+    background: linear-gradient(135deg, #0a2540 0%, #14315c 100%);
+    border-bottom: 3px solid #d4af37;
+}
+
+#branding h1 {
+    font-weight: 700;
+}
+
+.admin-branding-sub {
+    margin-left: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #f1d98b;
+    opacity: 0.85;
+}
+
+.button.default, input[type="submit"].default, .submit-row input.default {
+    color: #0a2540;
+    font-weight: 700;
+}
+
+/* Botão "default" (o de destaque, ex.: Salvar) em dourado com texto
+   escuro para manter contraste, já que ele fica claro. */
+.button.default:active, input[type="submit"].default:active {
+    background: #c9a02c;
+}
+
+/* Linha de excluir mantém o vermelho padrão do Django - é um sinal de
+   perigo universal e não faz sentido "combinar" com a paleta do site. */

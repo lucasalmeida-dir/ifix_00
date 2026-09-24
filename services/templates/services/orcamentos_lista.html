@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Orçamentos{% endblock %}
+{% block content %}
+<div class="mobile-bg-stage">
+<div class="services-banner">
+    <div class="services-banner-icon" aria-hidden="true">💰</div>
+    <div class="services-banner-text">
+        <h1 class="services-banner-title">Orçamentos</h1>
+        <p class="services-banner-subtitle">
+            {% if user.profile.is_profissional %}
+                Depois de visitar o cliente, envie aqui o valor real do serviço e os dias de visita necessários.
+            {% else %}
+                Acompanhe o valor real do serviço e os dias de visita combinados com o profissional.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="service-row-list">
+    {% for s in solicitacoes %}
+        <article class="service-row-card orcamento-row-card">
+            <div class="service-row-icon" aria-hidden="true">{{ s.servico.categoria.icone|default:"💰" }}</div>
+            <div class="service-row-body">
+                <span class="service-row-pill">{{ s.servico.nome }}</span>
+                <h2 class="service-row-title">
+                    {% if user.profile.is_profissional %}
+                        {{ s.usuario.get_full_name|default:s.usuario.username }}
+                    {% else %}
+                        {{ s.servico.profissional.get_full_name|default:s.servico.profissional.username }}
+                    {% endif %}
+                </h2>
+                <div class="service-row-meta">
+                    <span class="service-row-stat">
+                        <span class="service-row-stat-icon">💰</span>
+                        <span><small>Orçamento</small>{% if s.orcamento %}R$ {{ s.orcamento.valor }}{% else %}Aguardando valor{% endif %}</span>
+                    </span>
+                    <span class="service-row-stat">
+                        <span class="service-row-stat-icon">📅</span>
+                        <span><small>Dias de visita</small>{% if s.orcamento and s.orcamento.dias_visita.count %}{{ s.orcamento.dias_visita.count }} visita{{ s.orcamento.dias_visita.count|pluralize }}{% else %}-{% endif %}</span>
+                    </span>
+                    {% if s.orcamento %}
+                        <span class="service-row-stat">
+                            <span class="service-row-stat-icon">📶</span>
+                            <span><small>Status</small>{{ s.orcamento.get_status_display }}</span>
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="service-row-actions">
+                {% if user.profile.is_profissional %}
+                    <a href="{% url 'services:orcamento_editar' s.pk %}" class="btn btn-primary btn-sm">{% if s.orcamento %}✏️ Editar{% else %}➕ Adicionar{% endif %}</a>
+                {% else %}
+                    <a href="{% url 'services:orcamento_detalhe' s.pk %}" class="btn btn-outline-primary btn-sm">👁️ Ver orçamento</a>
+                {% endif %}
+            </div>
+        </article>
+    {% empty %}
+        <p class="text-muted text-center">Nenhuma solicitação confirmada ainda.</p>
+    {% endfor %}
+</div>
+</div>
+{% endblock %}

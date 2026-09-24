@@ -1,20 +1,14 @@
+from urllib.parse import urlparse
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.utils import timezone
 
-from .models import Profile
+from services.models import CategoriaServico
+
+from .models import Denuncia, Profile
 from .services import CepInvalidoError, consultar_cep, somente_digitos as _somente_digitos
-
-# Opções fixas de especialidade/área de atuação, usadas tanto no cadastro
-# profissional quanto na edição de dados profissionais — mantidas num só
-# lugar para as duas telas nunca ficarem dessincronizadas.
-ESPECIALIDADE_CHOICES = (
-    ('', 'Selecione uma especialidade'),
-    ('Elétrica', 'Elétrica'),
-    ('Hidráulica', 'Hidráulica'),
-    ('Marcenaria', 'Marcenaria'),
-    ('Pintura', 'Pintura'),
-)
 
 
 class IFIXAuthenticationForm(AuthenticationForm):
@@ -42,9 +36,19 @@ class UserRegisterForm(UserCreationForm):
         help_text='Usado internamente para calcular a distância até os profissionais.',
     )
     endereco = forms.CharField(required=True, label='Endereço')
-    numero = forms.CharField(required=True, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
-    complemento = forms.CharField(required=True, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
-    foto = forms.FileField(required=True, label='Foto de perfil', widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}))
+    numero = forms.CharField(required=False, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
+    complemento = forms.CharField(required=False, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
+    foto = forms.FileField(
+        required=False, label='Foto de perfil (opcional agora)',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        help_text='Pode adicionar depois em "Editar perfil".',
+    )
+
+    aceite_termos = forms.BooleanField(
+        required=True,
+        label='Li e aceito os Termos de Uso e a Política de Privacidade',
+        error_messages={'required': 'É preciso aceitar os Termos de Uso e a Política de Privacidade para criar a conta.'},
+    )
 
     class Meta:
         model = User
@@ -72,6 +76,8 @@ class UserRegisterForm(UserCreationForm):
             Profile.objects.create(
                 user=user,
                 tipo=Profile.TIPO_USUARIO,
+                termos_aceitos=True,
+                termos_aceitos_em=timezone.now(),
                 telefone=self.cleaned_data.get('telefone', ''),
                 cep=self.cleaned_data.get('cep', ''),
                 latitude=cep_info.get('latitude'),
@@ -79,13 +85,21 @@ class UserRegisterForm(UserCreationForm):
                 endereco=self.cleaned_data.get('endereco', ''),
                 numero=self.cleaned_data.get('numero', ''),
                 complemento=self.cleaned_data.get('complemento', ''),
+                bairro=cep_info.get('bairro', ''),
+                cidade=cep_info.get('cidade', ''),
+                uf=cep_info.get('uf', ''),
                 foto=self.cleaned_data.get('foto'),
             )
         return user
 
 
 class ProfessionalRegisterForm(UserCreationForm):
-    """Cadastro profissional (P1 - Cadastro profissional)."""
+    """Cadastro profissional (P1 - Cadastro profissional).
+
+    A Especialidade/Área de atuação não é pedida aqui: fica para a tela
+    seguinte (`escolher_especialidade`), exibida logo depois que o
+    profissional aperta "Cadastrar" e aceita o Termo de Uso.
+    """
 
     first_name = forms.CharField(required=True, label='Nome')
     last_name = forms.CharField(required=True, label='Sobrenome')
@@ -99,12 +113,12 @@ class ProfessionalRegisterForm(UserCreationForm):
         help_text='Usado internamente para calcular a distância até os clientes.',
     )
     endereco = forms.CharField(required=True, label='Endereço')
-    numero = forms.CharField(required=True, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
-    complemento = forms.CharField(required=True, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
-    foto = forms.FileField(required=True, label='Foto de perfil', widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}))
-    especialidade = forms.ChoiceField(
-        required=True, label='Especialidade/Área de atuação',
-        choices=ESPECIALIDADE_CHOICES,
+    numero = forms.CharField(required=False, label='Número', widget=forms.TextInput(attrs={'style': 'max-width: 180px;'}))
+    complemento = forms.CharField(required=False, label='Complemento', widget=forms.TextInput(attrs={'style': 'max-width: 280px;'}))
+    foto = forms.FileField(
+        required=False, label='Foto de perfil (opcional agora)',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        help_text='Pode adicionar depois em "Editar perfil".',
     )
 
     class Meta:
@@ -140,10 +154,29 @@ class ProfessionalRegisterForm(UserCreationForm):
                 endereco=self.cleaned_data.get('endereco', ''),
                 numero=self.cleaned_data.get('numero', ''),
                 complemento=self.cleaned_data.get('complemento', ''),
+                bairro=cep_info.get('bairro', ''),
+                cidade=cep_info.get('cidade', ''),
+                uf=cep_info.get('uf', ''),
                 foto=self.cleaned_data.get('foto'),
-                especialidade=self.cleaned_data.get('especialidade', ''),
             )
         return user
+
+
+class EspecialidadeForm(forms.ModelForm):
+    """Tela própria, exibida logo depois do cadastro profissional, para o
+    profissional escolher em quais categorias de serviço ele atua -
+    pode marcar mais de uma."""
+
+    especialidades = forms.ModelMultipleChoiceField(
+        queryset=CategoriaServico.objects.all(),
+        required=True,
+        label='Especialidades/Áreas de atuação',
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = Profile
+        fields = ['especialidades']
 
 
 class ProfileEditForm(forms.ModelForm):
@@ -157,9 +190,11 @@ class ProfileEditForm(forms.ModelForm):
         label='Foto de perfil',
         widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'profile-photo-input'}),
     )
-    especialidade = forms.ChoiceField(
-        required=True, label='Especialidade/Área de atuação',
-        choices=ESPECIALIDADE_CHOICES,
+    especialidades = forms.ModelMultipleChoiceField(
+        queryset=CategoriaServico.objects.all(),
+        required=True,
+        label='Especialidades/Áreas de atuação',
+        widget=forms.CheckboxSelectMultiple,
     )
 
     cep = forms.CharField(
@@ -172,7 +207,7 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['telefone', 'cep', 'endereco', 'numero', 'complemento', 'foto', 'especialidade']
+        fields = ['telefone', 'cep', 'endereco', 'numero', 'complemento', 'foto', 'especialidades', 'site_url']
         labels = {
             'telefone': 'Telefone',
             'cep': 'CEP',
@@ -180,12 +215,15 @@ class ProfileEditForm(forms.ModelForm):
             'numero': 'Número',
             'complemento': 'Complemento',
             'foto': 'Foto de perfil',
-            'especialidade': 'Especialidade/Área de atuação',
+            'especialidades': 'Especialidades/Áreas de atuação',
+            'site_url': 'Link da sua landing page / site (opcional)',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['numero'].widget.attrs['style'] = 'max-width: 180px;'
+        if 'site_url' in self.fields:
+            self.fields['site_url'].widget.attrs['placeholder'] = 'https://meusite.com.br'
         self.fields['complemento'].widget.attrs['style'] = 'max-width: 280px;'
         if self.instance and self.instance.user_id:
             self.fields['first_name'].initial = self.instance.user.first_name
@@ -193,20 +231,28 @@ class ProfileEditForm(forms.ModelForm):
             self.fields['email'].initial = self.instance.user.email
         if not (self.instance and self.instance.is_profissional):
             # Usuários comuns não têm especialidade profissional.
-            del self.fields['especialidade']
+            del self.fields['especialidades']
+            del self.fields['site_url']
         field_order = [
             'foto',
             'first_name',
             'last_name',
-            'especialidade',
+            'especialidades',
             'email',
             'telefone',
             'cep',
             'endereco',
             'numero',
             'complemento',
+            'site_url',
         ]
         self.order_fields([field_name for field_name in field_order if field_name in self.fields])
+
+    def clean_site_url(self):
+        url = (self.cleaned_data.get('site_url') or '').strip()
+        if url and urlparse(url).scheme not in ('http', 'https'):
+            raise forms.ValidationError('Use um link começando com http:// ou https://')
+        return url
 
     def clean_cep(self):
         cep = self.cleaned_data.get('cep', '')
@@ -232,11 +278,81 @@ class ProfileEditForm(forms.ModelForm):
         if cep_info:
             profile.latitude = cep_info.get('latitude')
             profile.longitude = cep_info.get('longitude')
+            profile.bairro = cep_info.get('bairro', '')
+            profile.cidade = cep_info.get('cidade', '')
+            profile.uf = cep_info.get('uf', '')
         user = profile.user
         user.first_name = self.cleaned_data.get('first_name', '')
         user.last_name = self.cleaned_data.get('last_name', '')
         user.email = self.cleaned_data.get('email', '')
         if commit:
             profile.save()
+            self.save_m2m()
             user.save()
         return profile
+
+
+_ASSINATURAS = {
+    '.jpg': (bytes.fromhex('ffd8ff'),),
+    '.jpeg': (bytes.fromhex('ffd8ff'),),
+    '.png': (bytes.fromhex('89504e47'),),
+    '.webp': (b'RIFF',),
+    '.pdf': (b'%PDF',),
+}
+TAMANHO_MAXIMO_VERIFICACAO = 5 * 1024 * 1024
+
+
+def _validar_arquivo(arquivo, extensoes):
+    """Confere extensão, tamanho e os primeiros bytes (não confia só no nome)."""
+    nome = arquivo.name.lower()
+    extensao = nome[nome.rfind('.'):] if '.' in nome else ''
+    if extensao not in extensoes:
+        raise forms.ValidationError('Formato não aceito. Envie ' + ', '.join(e.strip('.').upper() for e in extensoes) + '.')
+    if arquivo.size > TAMANHO_MAXIMO_VERIFICACAO:
+        raise forms.ValidationError('O arquivo é grande demais (máximo 5 MB).')
+    inicio = arquivo.read(12)
+    arquivo.seek(0)
+    if not any(inicio.startswith(assinatura) for assinatura in _ASSINATURAS[extensao]):
+        raise forms.ValidationError('O arquivo parece estar corrompido ou não é do tipo informado.')
+    return arquivo
+
+
+class VerificacaoForm(forms.Form):
+    """Envio de documento + foto para o selo "Profissional verificado"."""
+
+    documento = forms.FileField(
+        label='Documento com foto (RG ou CNH)',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*,application/pdf'}),
+        help_text='Foto nítida ou PDF, frente do documento. Máximo 5 MB.',
+    )
+    foto_verificacao = forms.FileField(
+        label='Foto do seu rosto',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*', 'capture': 'user'}),
+        help_text='Uma selfie sua, de rosto inteiro e com boa luz. Máximo 5 MB.',
+    )
+
+    def clean_documento(self):
+        return _validar_arquivo(self.cleaned_data['documento'], ('.jpg', '.jpeg', '.png', '.webp', '.pdf'))
+
+    def clean_foto_verificacao(self):
+        return _validar_arquivo(self.cleaned_data['foto_verificacao'], ('.jpg', '.jpeg', '.png', '.webp'))
+
+
+class DenunciaForm(forms.ModelForm):
+    class Meta:
+        model = Denuncia
+        fields = ['motivo', 'descricao']
+        labels = {'motivo': 'Motivo', 'descricao': 'O que aconteceu?'}
+        widgets = {
+            'motivo': forms.Select(attrs={'class': 'form-select'}),
+            'descricao': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 5, 'maxlength': 2000,
+                'placeholder': 'Conte com detalhes: o que aconteceu, quando, e o que você esperava.',
+            }),
+        }
+
+    def clean_descricao(self):
+        texto = (self.cleaned_data.get('descricao') or '').strip()
+        if len(texto) < 15:
+            raise forms.ValidationError('Descreva um pouco mais (pelo menos 15 caracteres).')
+        return texto

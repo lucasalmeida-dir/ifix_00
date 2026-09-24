@@ -1,74 +1,185 @@
 {% extends "base.html" %}
-{% block title %}Serviços disponíveis{% endblock %}
+{% load static %}
+{% block title %}{{ seo_titulo }}{% endblock %}
+{% block meta_description %}{{ seo_descricao }}{% endblock %}
+{% block robots %}{{ seo_robots }}{% endblock %}
+{% block canonical %}{{ seo_canonical }}{% endblock %}
+{% block og_title %}{{ seo_titulo }}{% endblock %}
+{% block og_description %}{{ seo_descricao }}{% endblock %}
 {% block content %}
-<h2 class="mb-4">Serviços disponíveis</h2>
+<div class="mobile-bg-stage">
+<div class="mobile-glass">
+<h1 class="h2 mb-1">{{ seo_h1 }}{% if cidade_pagina %} <small class="text-muted fs-6">{{ cidade_pagina.nome }}{% if cidade_pagina.uf %}/{{ cidade_pagina.uf }}{% endif %}</small>{% endif %}</h1>
+<p class="text-muted mb-4">Busque por nome, categoria ou serviço e solicite uma visita.</p>
 
 {% if user.is_authenticated and user.profile.is_usuario and not distancia_disponivel %}
     <div class="alert alert-info">
-        Cadastre seu CEP no <a href="{% url 'accounts:profile_edit' %}">seu perfil</a> para ver a distância até cada profissional.
+        Cadastre seu CEP no <a href="{% url 'accounts:profile_edit' %}">seu perfil</a> para ver a distância até cada profissional e ordenar por mais próximos.
     </div>
 {% endif %}
 
-<form method="get" class="row g-2 mb-4">
-    <div class="col-md-6">
+<form method="get" class="service-search-bar mb-3">
+    <label class="service-search-input">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         {{ form.q }}
-    </div>
-    <div class="col-md-4">
-        {{ form.categoria }}
-    </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-    </div>
+    </label>
+    <button type="submit" class="btn btn-primary">Buscar</button>
 </form>
 
-<div class="mb-4">
-    <span class="text-muted me-2">Categorias:</span>
-    <a href="{% url 'services:servico_list' %}" class="badge text-bg-light text-decoration-none me-1">Todas</a>
+<div class="ordenar-chip-row mb-4">
+    <a href="{% querystring ordenar='preco' %}" class="ordenar-chip {% if form.ordenar.value == 'preco' %}active{% endif %}">💰 Menor preço</a>
+    <a href="{% querystring ordenar='distancia' %}" class="ordenar-chip {% if form.ordenar.value == 'distancia' %}active{% endif %}">📍 Mais próximos</a>
+    <a href="{% querystring ordenar='avaliacao' %}" class="ordenar-chip {% if form.ordenar.value == 'avaliacao' %}active{% endif %}">⭐ Melhor avaliados</a>
+    {% if form.ordenar.value %}<a href="{% querystring ordenar=None %}" class="ordenar-chip ordenar-chip-limpar">Limpar ordenação</a>{% endif %}
+</div>
+
+<div class="category-chip-row mb-4">
+    <a href="{% url 'services:servico_list' %}{% if request.GET.q %}?q={{ request.GET.q|urlencode }}{% endif %}" class="category-chip {% if not request.GET.categoria and not categoria_pagina %}active{% endif %}">Todas</a>
     {% for categoria in categorias %}
-        <a href="?categoria={{ categoria.pk }}" class="badge text-bg-light text-decoration-none me-1">{{ categoria.nome }}</a>
+        <a href="{% if request.GET.q %}?categoria={{ categoria.pk }}&amp;q={{ request.GET.q|urlencode }}{% else %}{{ categoria.get_absolute_url }}{% endif %}" class="category-chip {% if categoria_pagina.pk == categoria.pk or request.GET.categoria == categoria.pk|stringformat:'s' %}active{% endif %}">
+            {% if categoria.icone %}{{ categoria.icone }} {% endif %}{{ categoria.nome }}
+        </a>
     {% endfor %}
 </div>
 
-<div class="service-grid">
+</div>
+
+<p class="text-muted small mb-3 mobile-glass-pill">
+    {% if servicos|length == 1 %}1 profissional encontrado{% else %}{{ servicos|length }} profissionais encontrados{% endif %}
+</p>
+
+<div class="service-grid" id="service-grid">
     {% for servico in servicos %}
-        <div>
-            <div class="card card-servico h-100 shadow-sm">
-                <div class="card-body d-flex flex-column align-items-center text-center">
+        <div class="card card-servico h-100 shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center text-center">
+                {% if user.is_authenticated and user.profile.is_usuario %}
+                    <form method="post" action="{% url 'services:favorito_toggle' servico.pk %}" class="favorito-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="favorito-btn {% if servico.pk in favoritos_ids %}is-favorito{% endif %}" aria-label="Favoritar" title="Favoritar">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 21s-7.5-4.7-10-9C.3 8.5 2 4.5 6 4.5c2 0 3.5 1 4.5 2.5.9 0.9 1.5 0.9 2.5 0C13.5 5.5 15 4.5 17 4.5c4 0 5.7 4 4 7.5-2.5 4.3-10 9-10 9z"/></svg>
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'services:perfil_profissional' servico.profissional.pk %}" class="service-provider-photo-link" title="Ver perfil" aria-label="Ver perfil de {{ servico.profissional.get_full_name|default:servico.profissional.username }}">
                     <div class="service-provider-photo">
                         {% if servico.profissional.profile.foto %}
-                            <img src="{{ servico.profissional.profile.foto.url }}" alt="Foto de {{ servico.profissional.username }}">
+                            <img loading="lazy" decoding="async" src="{{ servico.profissional.profile.foto.url }}" alt="Foto de {{ servico.profissional.get_full_name|default:servico.profissional.username }}">
                         {% else %}
                             <span>{{ servico.profissional.username|first|upper }}</span>
                         {% endif %}
                     </div>
-                    <div class="service-card-info d-flex flex-column align-items-center w-100">
-                        <div class="service-category-rating mb-2">
-                            <span class="badge text-bg-info">{{ servico.categoria.nome }}</span>
-                            {% if servico.distancia_km is not None %}
-                                <span class="badge text-bg-secondary" title="Distância aproximada até você">📍 {{ servico.distancia_km|floatformat:1 }} km</span>
-                            {% endif %}
-                        </div>
-                        <h5 class="card-title">{{ servico.nome }}</h5>
-                        <div class="professional-info mb-3">
-                            <strong class="professional-name">{{ servico.profissional.username }}</strong>
-                            <div class="professional-rating" aria-label="Avaliação do profissional">
-                                {% if servico.total_avaliacoes %}
-                                    <span class="rating-stars" aria-label="{{ servico.avaliacao_media|floatformat:1 }} de 5 estrelas">{{ servico.avaliacao_estrelas }}</span>
-                                    <span class="rating-score">{{ servico.avaliacao_media|floatformat:1 }}/5 ({{ servico.total_avaliacoes }})</span>
-                                {% else %}
-                                    <span class="rating-score">Ainda sem avaliações</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <p class="card-text text-muted small">{{ servico.descricao|truncatewords:20 }}</p>
-                        <p class="mb-1"><strong>{{ servico.faixa_preco }}</strong> &middot; {{ servico.duracao_minutos }} min</p>
-                        <a href="{% url 'services:servico_detail' servico.pk %}" class="btn btn-outline-primary mt-auto">Ver detalhes</a>
-                    </div>
+                </a>
+
+                <h2 class="card-title h5 mb-1"><a class="text-decoration-none text-reset" href="{% url 'services:servico_detail' servico.slug %}">{{ servico.profissional.get_full_name|default:servico.profissional.username }}</a>{% if servico.profissional.profile.verificado %} {% include "_selo_verificado.html" %}{% endif %}</h2>
+
+                <div class="professional-rating mb-2" aria-label="Avaliação do profissional">
+                    {% if servico.total_avaliacoes %}
+                        <span class="rating-stars" aria-label="{{ servico.avaliacao_media|floatformat:1 }} de 5 estrelas">{{ servico.avaliacao_estrelas }}</span>
+                        <span class="rating-score">{{ servico.avaliacao_media|floatformat:1 }} ({{ servico.total_avaliacoes }})</span>
+                    {% else %}
+                        <span class="rating-score">Sem avaliações ainda</span>
+                    {% endif %}
                 </div>
+
+
+                <div class="service-tag-row mb-3">
+                    <span class="badge-categoria">{% if servico.categoria.icone %}{{ servico.categoria.icone }} {% endif %}{{ servico.categoria.nome }}{% if servico.subservico %} &middot; {{ servico.subservico }}{% endif %}</span>
+                    {% if servico.distancia_km is not None %}
+                        <span class="badge-distancia" title="Distância aproximada até você">📍 {{ servico.distancia_km|floatformat:1 }} km</span>
+                    {% endif %}
+                    {% if servico.profissional.profile.cidade %}
+                        <span class="badge-distancia" title="Cidade do profissional">🏙️ {{ servico.profissional.profile.cidade }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="service-price-row mb-3">
+                    <span class="text-muted service-price-label">Preço da visita entre:</span>
+                    <strong>{{ servico.faixa_preco }}</strong>
+                    <span class="text-muted">{{ servico.duracao_minutos }} min</span>
+                </div>
+
+                {% if user.is_authenticated and user.profile.is_usuario %}
+                    <label class="multi-select mt-auto"><input type="checkbox" class="multi-select-input" value="{{ servico.pk }}"> Pedir para vários</label>
+                    <a href="{% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary w-100">Solicitar visita</a>
+                {% elif not user.is_authenticated %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary mt-auto w-100">Solicitar visita</a>
+                {% else %}
+                    <a href="{% url 'services:servico_detail' servico.slug %}" class="btn btn-outline-primary mt-auto w-100">Ver detalhes</a>
+                {% endif %}
             </div>
         </div>
     {% empty %}
-        <p class="text-muted">Nenhum serviço encontrado.</p>
+        <div class="service-empty-state">
+            <span class="chat-empty-icon">🔍</span>
+            <div>
+                <strong class="d-block mb-1">Nenhum profissional encontrado</strong>
+                <span class="text-muted">Tente outra busca ou escolha outra categoria.</span>
+            </div>
+        </div>
     {% endfor %}
 </div>
+
+{% if servicos %}
+    <div class="service-grid-dots mobile-dots-pill" id="service-grid-dots" aria-hidden="true">
+        {% for servico in servicos|slice:":10" %}
+            <span class="service-grid-dot"></span>
+        {% endfor %}
+    </div>
+{% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // No celular, o grid de cards vira um carrossel horizontal (ver
+        // CSS); esses pontinhos abaixo dele acompanham qual card está
+        // visível no momento, dando o feedback de "deslizar" entre eles.
+        var grid = document.getElementById('service-grid');
+        var dotsContainer = document.getElementById('service-grid-dots');
+        if (!grid || !dotsContainer || !window.IntersectionObserver) {
+            return;
+        }
+
+        var cards = Array.prototype.filter.call(grid.children, function (el) {
+            return el.classList.contains('card-servico');
+        });
+        var dots = Array.prototype.slice.call(dotsContainer.children);
+        // Com mais de 10 cards, só existem 10 bolinhas: cada uma representa
+        // uma faixa de cards (ver marcarAtivo).
+        if (!cards.length || dots.length !== Math.min(cards.length, 10)) {
+            return;
+        }
+
+        function marcarAtivo(indice) {
+            var ativo = cards.length > dots.length
+                ? Math.round(indice * (dots.length - 1) / (cards.length - 1))
+                : indice;
+            dots.forEach(function (dot, i) {
+                dot.classList.toggle('is-active', i === ativo);
+            });
+        }
+        marcarAtivo(0);
+
+        var observer = new IntersectionObserver(function (entries) {
+            var maisVisivel = null;
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting && (!maisVisivel || entry.intersectionRatio > maisVisivel.intersectionRatio)) {
+                    maisVisivel = entry;
+                }
+            });
+            if (maisVisivel) {
+                marcarAtivo(cards.indexOf(maisVisivel.target));
+            }
+        }, { root: grid, threshold: [0.5, 0.75, 0.9] });
+
+        cards.forEach(function (card) { observer.observe(card); });
+    });
+</script>
+{% if user.is_authenticated and user.profile.is_usuario %}
+<div class="multi-bar" id="multi-bar" data-url="{% url 'services:solicitar_varios' %}" hidden>
+    <span id="multi-bar-texto"></span>
+    <a class="btn btn-success" id="multi-bar-link" href="#">Pedir para todos</a>
+</div>
+<script src="{% static 'js/multi-select.js' %}?v=1"></script>
+{% endif %}
 {% endblock %}

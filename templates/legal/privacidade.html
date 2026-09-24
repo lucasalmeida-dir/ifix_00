@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidade | IFIX{% endblock %}
+{% block meta_description %}Como o IFIX coleta, usa, compartilha e protege seus dados pessoais, e como exercer seus direitos previstos na LGPD.{% endblock %}
+{% block robots %}index,follow{% endblock %}
+{% block content %}
+{# MODELO: os trechos entre [colchetes] precisam ser preenchidos e o texto deve ser revisado por um advogado antes de ir ao ar. #}
+<div class="row justify-content-center">
+    <div class="col-lg-9 legal-page">
+        <h1 class="h2 mb-1">Política de Privacidade</h1>
+        <p class="text-muted">Versão 1.0 — vigente a partir de [15/09/2026]. Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).</p>
+
+        <h2>1. Quem somos</h2>
+        <p>O IFIX é uma plataforma que aproxima clientes e profissionais de serviços residenciais (elétrica, hidráulica, marcenaria e pintura). O controlador dos seus dados pessoais é <strong>[RAZÃO SOCIAL COMPLETA]</strong>, CNPJ <strong>[00.000.000/0001-00]</strong>, com sede em <strong>[endereço completo]</strong>. Contato do encarregado de proteção de dados (DPO): <strong>[privacidade@dominio.com.br]</strong>.</p>
+
+        <h2>2. Quais dados coletamos</h2>
+        <ul>
+            <li><strong>Cadastro:</strong> nome, sobrenome, usuário, e-mail, telefone, senha (guardada de forma criptografada) e foto de perfil.</li>
+            <li><strong>Endereço e localização:</strong> CEP, endereço, número, complemento, bairro, cidade e UF; coordenadas aproximadas derivadas do CEP e, quando você permitir, a localização (GPS) enviada num pedido de visita.</li>
+            <li><strong>Pedidos e uso do serviço:</strong> solicitações, datas e turnos, orçamentos, avaliações, favoritos, denúncias e bloqueios.</li>
+            <li><strong>Conteúdo enviado por você:</strong> mensagens do chat, fotos, vídeos e áudios.</li>
+            <li><strong>Profissionais:</strong> especialidades, chave Pix para repasse, link da sua página e, para o selo de verificado, <strong>foto do rosto e documento de identificação</strong>.</li>
+            <li><strong>Login com Google:</strong> nome e e-mail da conta Google, quando você escolhe entrar por ela.</li>
+            <li><strong>Dados técnicos:</strong> endereço IP, tipo de navegador, data/hora de acesso e o aceite dos termos.</li>
+        </ul>
+
+        <h2>3. Para que usamos (finalidades) e em que base legal</h2>
+        <ul>
+            <li><strong>Executar o serviço que você pediu</strong> — criar sua conta, mostrar profissionais, calcular distância, enviar pedidos, orçamentos, chat e avisos (art. 7º, V, LGPD: execução de contrato).</li>
+            <li><strong>Segurança e prevenção a fraudes</strong> — verificação de identidade de profissionais, análise de denúncias, bloqueios e logs (art. 7º, IX: legítimo interesse; art. 7º, II: obrigação legal).</li>
+            <li><strong>Pagamentos</strong> — repasse por Pix e guarda de comprovantes (art. 7º, V e II).</li>
+            <li><strong>Comunicação</strong> — e-mails e notificações sobre seus pedidos (art. 7º, V).</li>
+            <li><strong>Melhorar o IFIX</strong> — estatísticas de uso, sempre que possível de forma agregada (art. 7º, IX).</li>
+            <li><strong>Cookies não essenciais</strong> — só com o seu consentimento (art. 7º, I). Veja a seção 8.</li>
+        </ul>
+
+        <h2>4. Com quem compartilhamos</h2>
+        <ul>
+            <li><strong>A outra parte do serviço:</strong> ao pedir ou aceitar uma visita, cliente e profissional veem o necessário para combinar o atendimento (nome, telefone, endereço da visita, fotos do problema, mensagens).</li>
+            <li><strong>Operadores que nos ajudam:</strong> consulta de CEP (ViaCEP), login do Google, envio de e-mails e provedor de pagamentos Pix (quando habilitado), sempre limitados ao necessário.</li>
+            <li><strong>Autoridades:</strong> quando houver ordem legal ou judicial.</li>
+        </ul>
+        <p><strong>Não vendemos seus dados pessoais.</strong> Documentos de verificação ficam em área privada, sem endereço público, e só a equipe autorizada os acessa para conferir identidade.</p>
+
+        <h2>5. Por quanto tempo guardamos</h2>
+        <p>Mantemos os dados enquanto sua conta existir. Ao excluir a conta, apagamos seus dados pessoais; podem permanecer, sem identificar você, apenas registros que a lei exige guardar (por exemplo, comprovantes de pagamento e logs de acesso por 6 meses, conforme o Marco Civil da Internet — Lei nº 12.965/2014).</p>
+
+        <h2>6. Seus direitos (art. 18 da LGPD)</h2>
+        <p>Você pode, a qualquer momento: confirmar que tratamos seus dados; acessá-los; corrigi-los (em <a href="{% url 'accounts:profile_edit' %}">Editar perfil</a>); pedir anonimização, bloqueio ou eliminação; pedir portabilidade; saber com quem compartilhamos; revogar consentimentos; e se opor a tratamentos indevidos.</p>
+        <p><strong>Excluir sua conta:</strong> em <a href="{% url 'accounts:profile_edit' %}">Editar perfil</a> há o botão "Excluir minha conta". Para os demais pedidos, escreva para <strong>[privacidade@dominio.com.br]</strong>; respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+
+        <h2>7. Segurança</h2>
+        <p>Usamos senhas criptografadas, conexão segura (HTTPS), controle de acesso à equipe e armazenamento privado para documentos. Nenhum sistema é 100% invulnerável; em caso de incidente relevante, avisaremos você e a ANPD conforme a lei.</p>
+
+        <h2>8. Cookies</h2>
+        <p>Usamos <strong>cookies essenciais</strong> (sessão de login e proteção contra ataques — sem eles o site não funciona) e, se você aceitar, recursos de terceiros como o login com Google. Você escolhe no aviso exibido na primeira visita e pode mudar a qualquer momento em <a href="#" data-cookie-config>Preferências de cookies</a>.</p>
+
+        <h2>9. Crianças e adolescentes</h2>
+        <p>O IFIX é destinado a maiores de 18 anos. Não coletamos intencionalmente dados de menores.</p>
+
+        <h2>10. Alterações desta política</h2>
+        <p>Podemos atualizar este texto; a versão vigente sempre estará nesta página, com a data no topo. Mudanças relevantes serão avisadas por e-mail ou notificação.</p>
+
+        <p class="text-muted small mt-4">Veja também os <a href="{% url 'termos_clientes' %}">Termos de Uso para clientes</a>.</p>
+    </div>
+</div>
+{% endblock %}

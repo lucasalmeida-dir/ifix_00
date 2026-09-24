@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from . import views
+from . import views, views_seguranca
 from .forms import IFIXAuthenticationForm
 
 app_name = 'accounts'
@@ -56,13 +56,31 @@ urlpatterns = [
         name='password_reset_complete',
     ),
 
+    # Login rápido com Google (veja GOOGLE_OAUTH_CLIENT_ID em settings.py)
+    path('google/', views.google_login, name='google_login'),
+
     # --- Área do Usuário (U) ---
     path('cadastro/usuario/', views.register_user, name='register_user'),  # U1
     # --- Área do Profissional (P) ---
     path('cadastro/profissional/', views.register_professional, name='register_professional'),  # P1
 
+    # Aceite obrigatório do Termo de Condições de Uso (logo após o cadastro)
+    path('termos/', views.aceitar_termos, name='aceitar_termos'),
+
+    # P1.1 - Especialidade/Área de atuação, numa tela própria depois do
+    # cadastro profissional e do aceite do Termo de Uso
+    path('especialidade/', views.escolher_especialidade, name='escolher_especialidade'),
+
     # Comum às duas áreas
     path('perfil/editar/', views.profile_edit, name='profile_edit'),  # U2 / P2
+
+    # Confiança e segurança: selo de verificado, denúncia, bloqueio e LGPD
+    path('verificacao/', views_seguranca.verificacao, name='verificacao'),
+    path('verificacao/<int:pk>/decidir/', views_seguranca.decidir_verificacao, name='decidir_verificacao'),
+    path('verificacao/arquivo/<int:pk>/<str:campo>/', views_seguranca.arquivo_verificacao, name='arquivo_verificacao'),
+    path('denunciar/<int:user_id>/', views_seguranca.denunciar, name='denunciar'),
+    path('bloquear/<int:user_id>/', views_seguranca.bloquear, name='bloquear'),
+    path('excluir/', views_seguranca.excluir_conta, name='excluir_conta'),
 
     # Consulta de CEP (ViaCEP) usada via AJAX nos formulários de cadastro/edição
     path('cep/consultar/', views.consultar_cep_view, name='consultar_cep'),

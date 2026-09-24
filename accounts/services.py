@@ -29,6 +29,9 @@ toda com APIs gratuitas e sem chave:
 import math
 
 import requests
+from django.conf import settings
+
+GOOGLE_TOKENINFO_URL = 'https://oauth2.googleapis.com/tokeninfo'
 
 VIACEP_URL = 'https://viacep.com.br/ws/{cep}/json/'
 AWESOMEAPI_CEP_URL = 'https://cep.awesomeapi.com.br/json/{cep}'
@@ -292,6 +295,48 @@ def consultar_cep(cep):
         'uf': uf,
         'latitude': latitude,
         'longitude': longitude,
+    }
+
+
+class GoogleTokenInvalidoError(Exception):
+    """O token do "Entrar com Google" não é válido para este site."""
+    pass
+
+
+def verificar_id_token_google(id_token):
+    """Confere um ID token do "Sign In With Google" chamando o endpoint
+    tokeninfo do próprio Google (não precisa de biblioteca extra, nem de
+    client secret - só o Client ID, que é público).
+
+    Confere: assinatura/expiração (o Google já valida isso ao responder),
+    se o token foi emitido para ESTE site (`aud`) e se o e-mail já foi
+    confirmado pelo Google. Retorna {'email', 'nome', 'sobrenome'}.
+    """
+    if not settings.GOOGLE_OAUTH_CLIENT_ID:
+        raise GoogleTokenInvalidoError('Login com Google não está configurado neste site.')
+    try:
+        resposta = requests.get(GOOGLE_TOKENINFO_URL, params={'id_token': id_token}, timeout=TIMEOUT_SEGUNDOS)
+    except requests.RequestException:
+        raise GoogleTokenInvalidoError('Não foi possível confirmar sua conta Google agora. Tente de novo.')
+    if resposta.status_code != 200:
+        raise GoogleTokenInvalidoError('Sessão do Google expirada ou inválida. Tente entrar de novo.')
+    try:
+        dados = resposta.json()
+    except ValueError:
+        raise GoogleTokenInvalidoError('Resposta inesperada do Google.')
+
+    if dados.get('aud') != settings.GOOGLE_OAUTH_CLIENT_ID:
+        raise GoogleTokenInvalidoError('Este token do Google não pertence a este site.')
+    if dados.get('email_verified') not in ('true', True):
+        raise GoogleTokenInvalidoError('Seu e-mail do Google ainda não foi verificado.')
+    email = dados.get('email', '')
+    if not email:
+        raise GoogleTokenInvalidoError('O Google não retornou um e-mail.')
+
+    return {
+        'email': email,
+        'nome': dados.get('given_name', '') or dados.get('name', '') or email.split('@')[0],
+        'sobrenome': dados.get('family_name', ''),
     }
 
 

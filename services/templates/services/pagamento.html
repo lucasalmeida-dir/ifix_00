@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Pagamento por Pix{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h2 class="mb-1">Pagamento por Pix</h2>
+        <p class="text-muted mb-3">{{ solicitacao.servico.nome }} &middot; {{ solicitacao.servico.profissional.get_full_name|default:solicitacao.servico.profissional.username }}</p>
+
+        {% if pagamento %}
+            <div class="budget-card mb-3">
+                <span class="budget-card-label">Valor do orçamento</span>
+                <strong class="budget-card-value">R$ {{ pagamento.valor_total }}</strong>
+            </div>
+
+            <div class="pay-status pay-status-{{ pagamento.status }}" id="pay-status" data-url="{% url 'services:pagamento_status' solicitacao.pk %}" data-status="{{ pagamento.status }}">
+                {{ pagamento.get_status_display }}
+            </div>
+
+            {% if pagamento.status == 'pendente' and eh_cliente %}
+                <div class="pay-pix">
+                    {% if pagamento.pix_qrcode_base64 %}
+                        <img class="pay-qr" alt="QR Code do Pix" src="data:image/png;base64,{{ pagamento.pix_qrcode_base64 }}">
+                    {% else %}
+                        <div class="pay-qr pay-qr-placeholder">QR Code<br><small>aparece aqui quando o provedor de pagamento for configurado</small></div>
+                    {% endif %}
+                    <label class="form-label" for="pix-codigo">Pix copia e cola</label>
+                    <textarea id="pix-codigo" class="form-control" rows="3" readonly>{{ pagamento.pix_copia_cola }}</textarea>
+                    <button type="button" class="btn btn-outline-primary w-100 mt-2" id="pix-copiar">Copiar código</button>
+                    {% if pagamento.expira_em %}<p class="text-muted small mt-2 mb-0">Válido até {{ pagamento.expira_em|date:"d/m H:i" }}.</p>{% endif %}
+                </div>
+                {% if modo_simulado %}
+                    <form method="post" action="{% url 'services:pagamento_simular' solicitacao.pk %}" class="mt-3">
+                        {% csrf_token %}
+                        <button class="btn btn-warning w-100">Simular pagamento recebido (apenas testes)</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            <div class="rule-box mt-3">
+                <strong>Como funciona a retenção</strong>
+                <p class="mb-1">O valor fica seguro com o IFIX e só é repassado ao profissional quando o cliente marcar o serviço como <em>concluído</em>.</p>
+                {% if not eh_cliente %}
+                    <p class="mb-0">Você recebe <strong>R$ {{ pagamento.valor_profissional }}</strong> (taxa do IFIX: {{ pagamento.comissao_percentual }}% = R$ {{ pagamento.valor_comissao }}).
+                    {% if not chave_pix_cadastrada %}<br><strong>Cadastre sua chave Pix</strong> em <a href="{% url 'accounts:profile_edit' %}">Editar perfil</a> para receber o repasse.{% endif %}</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="budget-empty-state mb-3"><span>Nenhum pagamento iniciado para este serviço.</span></div>
+        {% endif %}
+
+        <a href="{% url 'services:orcamento_detalhe' solicitacao.pk %}" class="btn btn-outline-secondary w-100 mt-3">Voltar ao orçamento</a>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var copiar = document.getElementById('pix-copiar');
+    if (copiar) {
+        copiar.addEventListener('click', function () {
+            var campo = document.getElementById('pix-codigo');
+            campo.select();
+            if (navigator.clipboard) { navigator.clipboard.writeText(campo.value); } else { document.execCommand('copy'); }
+            copiar.textContent = 'Código copiado!';
+        });
+    }
+    var caixa = document.getElementById('pay-status');
+    if (caixa && caixa.dataset.status === 'pendente') {
+        setInterval(function () {
+            fetch(caixa.dataset.url, {credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(function (d) {
+                if (d.status && d.status !== 'pendente') { window.location.reload(); }
+            });
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

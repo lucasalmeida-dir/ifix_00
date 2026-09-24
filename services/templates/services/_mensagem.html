@@ -1,0 +1,12 @@
+{% if divisor_data %}<div class="chat-date-divider" data-divisor="{{ divisor_data }}"><span>{{ divisor_data }}</span></div>{% endif %}
+<div class="chat-bubble-row {% if mensagem.autor_id == user.id %}is-mine{% endif %}" data-id="{{ mensagem.pk }}" data-mine="{% if mensagem.autor_id == user.id %}1{% else %}0{% endif %}" data-data="{{ mensagem.criada_em|date:'d/m/Y' }}">
+    <div class="chat-bubble {% if mensagem.autor_id == user.id %}is-mine{% else %}is-theirs{% endif %}">
+        {% if mensagem.tipo == 'imagem' and mensagem.anexo %}
+            <a href="{{ mensagem.anexo.url }}" target="_blank" rel="noopener"><img class="chat-photo" loading="lazy" src="{{ mensagem.anexo.url }}" alt="Foto enviada no chat"></a>
+        {% elif mensagem.tipo == 'audio' and mensagem.anexo %}
+            <audio class="chat-audio" controls preload="none" src="{{ mensagem.anexo.url }}"></audio>
+        {% endif %}
+        {% if mensagem.texto %}<p>{{ mensagem.texto|linebreaksbr }}</p>{% endif %}
+        <span class="chat-bubble-time">{{ mensagem.criada_em|date:"H:i" }}{% if mensagem.autor_id == user.id %} <span class="chat-ticks{% if mensagem.lida %} is-read{% endif %}" title="{% if mensagem.lida %}Lida{% else %}Enviada{% endif %}">{% if mensagem.lida %}&#10003;&#10003;{% else %}&#10003;{% endif %}</span>{% endif %}</span>
+    </div>
+</div>

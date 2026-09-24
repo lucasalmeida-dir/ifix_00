@@ -1,0 +1,89 @@
+{% extends "base_auth.html" %}
+{% block title %}Orçamento &middot; {{ solicitacao.servico.nome }}{% endblock %}
+{% block content %}
+<div class="blob-stage">
+    <a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="row justify-content-center w-100">
+    <div class="col-lg-7">
+    <div class="blob-stage-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Enviar orçamento</h2>
+            <a href="{% url 'services:orcamentos_lista' %}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+        </div>
+        <p class="text-muted mb-4">
+            {{ solicitacao.servico.nome }} &middot; cliente {{ solicitacao.usuario.get_full_name|default:solicitacao.usuario.username }}
+        </p>
+
+        <form method="post" id="form-orcamento">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">{{ form.valor.label }}</label>
+                {{ form.valor }}
+                {{ form.valor.errors }}
+            </div>
+            <div class="mb-4">
+                <label class="form-label">{{ form.observacoes.label }}</label>
+                {{ form.observacoes }}
+                {{ form.observacoes.errors }}
+            </div>
+
+            <label class="form-label d-block mb-2">Dias de visita necessários</label>
+            <p class="text-muted small">Adicione um dia para cada visita que você vai precisar fazer na casa do cliente até concluir o serviço.</p>
+
+            {{ formset.management_form }}
+            {{ formset.non_form_errors }}
+
+            <div id="dias-visita-rows">
+                {% for dia_form in formset %}
+                    <div class="budget-day-row {% if dia_form.instance.pk %}has-existing-pk{% endif %}">
+                        {{ dia_form.id }}
+                        {{ dia_form.data }}
+                        {% if formset.can_delete %}
+                            <label class="budget-day-delete">
+                                {{ dia_form.DELETE }} Remover
+                            </label>
+                        {% endif %}
+                        {{ dia_form.data.errors }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="btn-add-dia" class="btn btn-outline-primary btn-sm mb-4">+ Adicionar outro dia</button>
+
+            <button type="submit" class="btn btn-primary w-100">Enviar orçamento ao cliente</button>
+        </form>
+    </div>
+    </div>
+    </div>
+</div>
+
+<template id="template-dia-visita">
+    <div class="budget-day-row">
+        <input type="date" name="dias-__prefix__-data" id="id_dias-__prefix__-data">
+        <label class="budget-day-delete">
+            <input type="checkbox" name="dias-__prefix__-DELETE" id="id_dias-__prefix__-DELETE"> Remover
+        </label>
+    </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var totalFormsInput = document.getElementById('id_dias-TOTAL_FORMS');
+    var linhas = document.getElementById('dias-visita-rows');
+    var modelo = document.getElementById('template-dia-visita');
+    var botaoAdicionar = document.getElementById('btn-add-dia');
+
+    botaoAdicionar.addEventListener('click', function () {
+        var indice = parseInt(totalFormsInput.value, 10);
+        var html = modelo.innerHTML.replace(/__prefix__/g, indice);
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        linhas.appendChild(wrapper.firstElementChild);
+        totalFormsInput.value = indice + 1;
+    });
+});
+</script>
+{% endblock %}

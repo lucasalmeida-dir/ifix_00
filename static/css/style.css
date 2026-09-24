@@ -46,9 +46,14 @@ body {
     font-weight: 700;
 }
 
+.profile-photo-field {
+    text-align: center;
+}
+
 .profile-photo-picker {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 1rem;
 }
 
@@ -156,15 +161,96 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* No celular, em vez de empilhar os cards um embaixo do outro, o
+       grid vira um carrossel horizontal com "encaixe" suave por card
+       (scroll-snap) - mais fluido de navegar deslizando o dedo do que
+       rolar uma lista comprida. */
     .service-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        grid-template-columns: none;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0 -1rem;
+        padding: 0.25rem 1rem 0.75rem;
+        gap: 0.85rem;
+    }
+
+    .service-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .service-grid > .card-servico {
+        flex: 0 0 78%;
+        max-width: 78%;
+        scroll-snap-align: center;
+    }
+
+    .service-grid > .service-empty-state {
+        flex: 0 0 100%;
+        scroll-snap-align: start;
     }
 }
 
-@media (max-width: 576px) {
-    .service-grid {
-        grid-template-columns: 1fr;
+@media (max-width: 480px) {
+    .service-grid > .card-servico {
+        flex: 0 0 84%;
+        max-width: 84%;
     }
+}
+
+/* Um único card na lista: fica centralizado (computador e celular). */
+.service-grid > .card-servico:only-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - 4rem) / 5);
+    min-width: 230px;
+}
+
+@media (max-width: 1200px) {
+    .service-grid > .card-servico:only-child {
+        width: calc((100% - 2rem) / 3);
+    }
+}
+
+@media (max-width: 768px) {
+    .service-grid > .card-servico:only-child {
+        width: auto;
+        min-width: 0;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.service-grid-dots {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .service-grid-dots {
+        display: flex;
+    }
+}
+
+.service-grid-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(20, 49, 92, 0.2);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.service-grid-dot.is-active {
+    background-color: var(--color-blue);
+    transform: scale(1.5);
 }
 
 .card-servico {
@@ -178,7 +264,7 @@ body {
 }
 
 .card-servico .card-body {
-    min-height: 250px;
+    min-height: 230px;
 }
 
 .service-provider-photo {
@@ -203,18 +289,137 @@ body {
     object-fit: cover;
 }
 
-.service-card-info {
-    min-width: 0;
-    width: 100%;
-}
-
-.service-card-info .professional-info {
-    justify-content: center;
-}
-
 .badge.text-bg-info {
     background-color: var(--color-blue) !important;
     color: #fff !important;
+}
+
+/* ---------- Buscar profissional (services:servico_list) ---------- */
+.service-search-bar {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.service-search-input {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    display: block;
+}
+
+.service-search-input svg {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a8f98;
+    pointer-events: none;
+}
+
+.service-search-input input {
+    width: 100%;
+    padding-left: 2.5rem !important;
+    border-radius: 999px !important;
+}
+
+.category-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.category-chip {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(20, 49, 92, 0.18);
+    background-color: #fff;
+    color: var(--color-blue-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.category-chip:hover {
+    border-color: var(--color-blue);
+    color: var(--color-blue);
+}
+
+.category-chip.active {
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+    color: #fff;
+}
+
+.card-servico .card-title {
+    color: var(--color-blue-dark);
+}
+
+.service-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.badge-categoria,
+.badge-distancia {
+    display: inline-block;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.badge-categoria {
+    background-color: var(--color-blue);
+    color: #fff;
+}
+
+.badge-distancia {
+    background-color: var(--color-bg);
+    color: var(--color-blue-dark);
+    border: 1px solid rgba(20, 49, 92, 0.15);
+}
+
+.service-price-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    width: 100%;
+}
+
+.service-price-row strong {
+    font-size: 1.05rem;
+}
+
+.service-price-row span {
+    font-size: 0.8rem;
+}
+
+.service-price-label {
+    margin-bottom: 0.1rem;
+}
+
+.service-empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #8a8f98;
+    background-color: #fff;
+    border: 1px dashed rgba(20, 49, 92, 0.2);
+    border-radius: 0.75rem;
 }
 
 /* ---------- Hero / seção de destaque ---------- */
@@ -412,6 +617,7 @@ form input[type="email"],
 form input[type="password"],
 form input[type="number"],
 form input[type="tel"],
+form input[type="date"],
 form textarea,
 form select {
     display: block;
@@ -884,4 +1090,3524 @@ form ul.errorlist {
     .newsletter-form {
         flex-direction: column;
     }
+}
+
+/* ---------- Calendário de solicitação de visita (U8) ---------- */
+.visit-calendar {
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    border-radius: 0.5rem;
+    background-color: #fff;
+    padding: 1rem;
+}
+
+.visit-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: var(--color-blue);
+}
+
+.visit-calendar-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: var(--color-blue);
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.visit-calendar-nav:hover {
+    background-color: var(--color-bg);
+}
+
+.visit-calendar-nav-disabled {
+    color: rgba(20, 49, 92, 0.25);
+    pointer-events: none;
+}
+
+.visit-calendar-weekdays,
+.visit-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+.visit-calendar-weekdays {
+    margin-bottom: 0.35rem;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-blue-light);
+}
+
+.visit-calendar-day {
+    aspect-ratio: 1 / 1;
+    border: 1px solid transparent;
+    border-radius: 0.4rem;
+    background-color: var(--color-bg);
+    color: var(--color-blue-dark);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.visit-calendar-day.is-outside {
+    color: rgba(20, 49, 92, 0.3);
+    background-color: transparent;
+}
+
+.visit-calendar-day.is-today {
+    border-color: var(--color-gold);
+}
+
+.visit-calendar-day:disabled {
+    cursor: not-allowed;
+    color: rgba(20, 49, 92, 0.2);
+    background-color: transparent;
+}
+
+.visit-calendar-day:not(:disabled):hover {
+    background-color: var(--color-gold-light);
+}
+
+.visit-calendar-day.is-selected {
+    background-color: var(--color-blue);
+    color: #fff;
+    border-color: var(--color-blue);
+}
+
+@media (max-width: 400px) {
+    .visit-calendar-day {
+        font-size: 0.85rem;
+    }
+}
+
+/* ---------- Mensagens: chat estilo WhatsApp ---------- */
+.chat-app {
+    display: flex;
+    height: 75vh;
+    min-height: 420px;
+    max-height: 760px;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 0.5rem 1.5rem rgba(10, 37, 64, 0.08);
+}
+
+.chat-sidebar {
+    width: 320px;
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(20, 49, 92, 0.1);
+    background-color: var(--color-bg);
+}
+
+.chat-sidebar-header {
+    padding: 0.9rem 1.1rem;
+    font-weight: 700;
+    color: var(--color-blue);
+    background-color: #fff;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+}
+
+.chat-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chat-list-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.06);
+    border-left: 3px solid transparent;
+    transition: background-color 0.15s ease;
+}
+
+.chat-list-item:hover {
+    background-color: rgba(20, 49, 92, 0.06);
+}
+
+.chat-list-item.active {
+    background-color: #fff;
+    border-left-color: var(--color-gold);
+}
+
+.chat-list-avatar,
+.chat-header-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.chat-list-avatar-placeholder,
+.chat-header-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-blue);
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.chat-list-info {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.chat-list-name-row,
+.chat-list-preview-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.chat-list-name {
+    font-weight: 600;
+    color: var(--color-blue-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-list-time {
+    font-size: 0.72rem;
+    color: #8a8f98;
+    flex-shrink: 0;
+}
+
+.chat-list-preview {
+    font-size: 0.82rem;
+    color: #6c7580;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-list-badge {
+    flex-shrink: 0;
+    background-color: var(--color-gold);
+    color: var(--color-blue-dark);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.28rem 0.45rem;
+}
+
+.chat-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+    background-color: #fff;
+}
+
+.chat-header-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.chat-header-info strong {
+    color: var(--color-blue-dark);
+}
+
+.chat-header-info small {
+    color: #8a8f98;
+}
+
+.chat-messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    background-color: #efece3;
+    background-image: radial-gradient(rgba(20, 49, 92, 0.035) 1px, transparent 1px);
+    background-size: 16px 16px;
+}
+
+.chat-date-divider {
+    text-align: center;
+    margin: 0.6rem 0;
+}
+
+.chat-date-divider span {
+    display: inline-block;
+    background-color: #fff;
+    color: #8a8f98;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.25rem 0.8rem;
+    border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(10, 37, 64, 0.08);
+}
+
+.chat-bubble-row {
+    display: flex;
+}
+
+.chat-bubble-row.is-mine {
+    justify-content: flex-end;
+}
+
+.chat-bubble {
+    max-width: 72%;
+    padding: 0.5rem 0.9rem 0.35rem;
+    border-radius: 1rem;
+    box-shadow: 0 1px 1px rgba(10, 37, 64, 0.08);
+}
+
+.chat-bubble p {
+    margin: 0 0 0.15rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.chat-bubble-time {
+    display: block;
+    text-align: right;
+    font-size: 0.68rem;
+    opacity: 0.7;
+}
+
+.chat-bubble.is-theirs {
+    background-color: #fff;
+    color: var(--color-blue-dark);
+    border-bottom-left-radius: 0.25rem;
+}
+
+.chat-bubble.is-mine {
+    background-color: var(--color-blue);
+    color: #fff;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.chat-bubble.is-mine .chat-bubble-time {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.chat-input-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid rgba(20, 49, 92, 0.1);
+    background-color: #fff;
+}
+
+.chat-input-bar textarea.chat-input {
+    flex: 1;
+    resize: none;
+    max-height: 120px;
+    border: 1px solid rgba(20, 49, 92, 0.2);
+    border-radius: 1.25rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+}
+
+.chat-input-bar textarea.chat-input:focus {
+    outline: none;
+    border-color: var(--color-blue-light);
+    box-shadow: 0 0 0 0.15rem rgba(31, 74, 134, 0.15);
+}
+
+.btn-send {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-blue);
+    color: #fff;
+    transition: background-color 0.15s ease;
+}
+
+.btn-send:hover {
+    background-color: var(--color-blue-light);
+}
+
+.chat-conclude-bar {
+    padding: 0 1.25rem 0.9rem;
+    background-color: #fff;
+}
+
+.chat-conclude-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 0 0 0.6rem;
+    padding: 0.55rem 0.9rem;
+    text-align: center;
+    color: var(--color-blue-dark);
+    background-color: var(--color-gold-light);
+    border: 1px solid var(--color-gold);
+    border-radius: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.chat-conclude-hint span {
+    font-size: 1.05rem;
+}
+
+.chat-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 50vh;
+    text-align: center;
+    color: #8a8f98;
+}
+
+.chat-empty-state .chat-empty-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg);
+    font-size: 2.2rem;
+}
+
+@media (max-width: 768px) {
+    .chat-app {
+        flex-direction: column;
+        height: calc(100vh - 90px);
+        height: calc(100dvh - 90px);
+        max-height: none;
+        width: auto;
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+        box-shadow: none;
+        /* Se o cabeçalho + composer + barra de concluir visita juntos
+           passarem da altura fixa acima, deixa arrastar pra baixo pra
+           revelar o resto (ex: o botão "Visita concluída") em vez de
+           cortar o conteúdo (overflow:hidden herdado do desktop). */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chat-sidebar {
+        width: 100%;
+        flex: 0 0 auto;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+    }
+
+    .chat-sidebar-header {
+        display: none;
+    }
+
+    .chat-list {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chat-list-item {
+        flex-direction: column;
+        gap: 0.3rem;
+        min-width: 76px;
+        padding: 0.6rem 0.5rem;
+        border-bottom: none;
+        border-left: none;
+        border-right: 1px solid rgba(20, 49, 92, 0.06);
+    }
+
+    .chat-list-item.active {
+        border-left: none;
+        border-bottom: 3px solid var(--color-gold);
+    }
+
+    .chat-list-info {
+        align-items: center;
+    }
+
+    .chat-list-name {
+        max-width: 76px;
+        font-size: 0.72rem;
+        text-align: center;
+    }
+
+    .chat-list-preview-row,
+    .chat-list-time {
+        display: none;
+    }
+
+    .chat-messages {
+        min-height: 0;
+        max-height: none;
+    }
+
+    .chat-bubble {
+        max-width: 85%;
+    }
+}
+
+/* ---------- Orçamentos (valor real + dias de visita) ---------- */
+.budget-card {
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue) 100%);
+    color: #fff;
+    border-radius: 0.85rem;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 0.5rem 1.5rem rgba(10, 37, 64, 0.15);
+}
+
+.budget-card-label {
+    display: block;
+    opacity: 0.8;
+    font-size: 0.85rem;
+}
+
+.budget-card-value {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--color-gold-light);
+}
+
+.budget-visits {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.budget-visits-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+
+.budget-visits-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.budget-visits-chips .badge-distancia {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.budget-card-observacoes {
+    margin: 1.25rem 0 0;
+    padding: 1rem 1.1rem;
+    text-align: left;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-left: 4px solid var(--color-gold);
+    border-radius: 0.5rem;
+}
+
+.budget-card-observacoes-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--color-gold-light);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.budget-card-observacoes p {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #fff;
+}
+
+/* "Observações do profissional" numa linha só no celular. */
+@media (max-width: 576px) {
+    .budget-card-observacoes-label {
+        white-space: nowrap;
+        font-size: 0.66rem;
+        letter-spacing: 0.02em;
+    }
+}
+
+/* <summary> com cara de botão (ex.: "Recusar orçamento"): tira a setinha
+   padrão do navegador. */
+.summary-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    cursor: pointer;
+}
+
+.summary-btn::-webkit-details-marker {
+    display: none;
+}
+
+.budget-empty-state {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #fff;
+    border: 1px dashed rgba(20, 49, 92, 0.2);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+}
+
+.budget-day-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.budget-day-row input[type="date"] {
+    max-width: 220px;
+    margin-bottom: 0;
+}
+
+.budget-day-delete {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #8a8f98;
+    white-space: nowrap;
+    margin-bottom: 0;
+}
+
+.budget-day-delete input {
+    width: auto;
+}
+
+@media (max-width: 480px) {
+    .budget-card-value {
+        font-size: 1.75rem;
+    }
+
+    .budget-empty-state {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* ---------- Tela gigante de "serviço concluído" (na aba Orçamentos) ---------- */
+.service-done-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 2rem 1rem;
+}
+
+.service-done-card {
+    width: 100%;
+    max-width: 560px;
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue) 100%);
+    color: #fff;
+    border-radius: 1.25rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 1.5rem 3rem rgba(10, 37, 64, 0.28);
+    border: 1px solid var(--color-gold);
+}
+
+.service-done-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: var(--color-gold);
+    color: var(--color-blue-dark);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+}
+
+.service-done-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--color-gold-light);
+    margin: 0 0 0.4rem;
+}
+
+.service-done-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.service-done-card hr {
+    border-color: rgba(255, 255, 255, 0.25);
+    margin: 1.75rem 0;
+}
+
+.service-done-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.service-done-redirect-hint {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.service-done-back-link {
+    display: inline-block;
+    margin-top: 1.75rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    text-decoration: underline;
+}
+
+.service-done-back-link:hover {
+    color: #fff;
+}
+
+@media (max-width: 480px) {
+    .service-done-title {
+        font-size: 1.8rem;
+    }
+
+    .service-done-card {
+        padding: 2.25rem 1.25rem;
+    }
+}
+
+/* ---------- Escolha de especialidades (cadastro profissional) ---------- */
+.specialty-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding: 0.25rem 0.25rem 0.25rem 0;
+}
+
+.specialty-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    background-color: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.specialty-card:hover {
+    border-color: var(--color-blue-light);
+    box-shadow: 0 0.25rem 0.75rem rgba(10, 37, 64, 0.08);
+}
+
+.specialty-card-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.specialty-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.specialty-card-title {
+    font-size: 1.05rem;
+    color: var(--color-blue-dark);
+}
+
+.specialty-card-check {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid rgba(20, 49, 92, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 0.8rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.specialty-card.is-selected {
+    border-color: var(--color-blue);
+    background-color: rgba(20, 49, 92, 0.05);
+}
+
+.specialty-card.is-selected .specialty-card-check {
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+    color: #fff;
+}
+
+.specialty-card-input:focus-visible ~ .specialty-card-check {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+    .specialty-card {
+        padding: 0.9rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .specialty-card-title {
+        font-size: 0.95rem;
+    }
+}
+
+/* ---------- Botões com ícone "+" (Adicionar serviço/vários) ---------- */
+.btn-icon-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 17rem;
+}
+
+.btn-plus-icon {
+    position: relative;
+    display: inline-block;
+    width: 1.3rem;
+    height: 1.3rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    /* O "+" do HTML fica só como texto acessível; o sinal visível é
+       desenhado abaixo com ::before/::after, centralizado de verdade via
+       position:absolute + translate(-50%,-50%) - depender do glifo "+"
+       da fonte deixava a cruz torta dentro do círculo. */
+    font-size: 0;
+}
+
+.btn-plus-icon::before,
+.btn-plus-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: currentColor;
+    transform: translate(-50%, -50%);
+}
+
+.btn-plus-icon::before {
+    width: 0.6rem;
+    height: 2px;
+}
+
+.btn-plus-icon::after {
+    width: 2px;
+    height: 0.6rem;
+}
+
+/* ---------- Mapa "Profissionais perto de você" ---------- */
+.professionals-map {
+    height: 65vh;
+    min-height: 380px;
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    overflow: hidden;
+}
+
+.map-avatar-photo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--color-gold);
+    box-shadow: 0 0.25rem 0.6rem rgba(10, 37, 64, 0.35);
+    background-color: var(--color-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    margin: 0 auto;
+}
+
+.map-avatar-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.map-avatar-marker-you .map-avatar-dot {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--color-blue);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px var(--color-blue-light), 0 0.2rem 0.5rem rgba(10, 37, 64, 0.4);
+}
+
+.map-popup {
+    font-size: 0.9rem;
+}
+
+.map-popup a {
+    color: var(--color-blue);
+    font-weight: 600;
+}
+
+/* ---------- Layout mínimo (base_auth.html) - telas de autenticação em
+   tela cheia, sem navbar nem rodapé ---------- */
+body.auth-body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+.auth-messages {
+    max-width: 32rem;
+    margin: 1rem auto 0;
+    padding: 0 1rem;
+}
+
+/* ---------- Balão vermelho de notificação no botão sanduíche (celular) ----------
+   Enquanto o menu está fechado no celular, os balões de "não lidos" ficam
+   escondidos dentro dele - esse balão no próprio ícone do menu mostra a
+   quantidade total de notificações, igual ao balão usado em "Mensagens". */
+.navbar-toggler-badge {
+    position: absolute;
+    top: -0.35rem;
+    right: -0.35rem;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    line-height: 1;
+}
+
+/* ---------- Fundo decorativo (imagem azul/dourada) ----------
+   Reaproveitado nas telas onde o usuário adiciona algo (orçamentos,
+   adicionar serviço, adicionar em lote, mensagens) - essas telas usam o
+   layout base_auth.html (sem navbar/rodapé) e esse fundo ocupa a tela
+   toda, no celular e no computador, igual ao login/cadastro. A imagem
+   fica num ::before cobrindo tudo (levemente maior e desfocada) para não
+   borrar o cartão/conteúdo em cima dela. */
+.blob-stage {
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg, #f7f5ef);
+    padding: 2rem 1rem;
+}
+
+.blob-stage::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    z-index: 0;
+    background-image: url('img/fundo-decorativo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(6px);
+    transform: scale(1.05);
+}
+
+/* As bolhas antigas não são mais usadas - a imagem entra pelo ::before
+   acima - mas a marcação (<span class="stage-blob ...">) continua nos
+   templates, então só a escondemos aqui. */
+.blob-stage .stage-blob {
+    display: none;
+}
+
+.blob-stage-card {
+    position: relative;
+    z-index: 1;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 1rem 2.5rem rgba(10, 37, 64, 0.12);
+    padding: 1.75rem 1.5rem;
+}
+
+/* Essas telas usam base_auth.html (sem navbar) - esse link no canto é o
+   único jeito de voltar pro resto do site, igual ao login/cadastro. */
+.blob-stage-brand {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    z-index: 2;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--color-blue-dark);
+    text-decoration: none;
+}
+
+.blob-stage-brand:hover {
+    color: var(--color-blue);
+}
+
+@media (max-width: 768px) {
+    .blob-stage {
+        padding: 1.25rem 1rem;
+    }
+}
+
+/* Nas telas de mensagens, o próprio .chat-app já ocupa a tela toda com
+   sua própria altura calculada - aqui o blob-stage só entra como pano
+   de fundo decorativo por trás dele, então não centraliza sozinho nem
+   disputa espaço com ele. */
+.blob-stage-chat {
+    display: block;
+    padding: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .blob-stage-chat {
+        padding: 0;
+    }
+}
+
+/* ---------- Tabelas "Meus serviços" e "Solicitações recebidas" mais
+   compactas no celular, pra caber todas as colunas sem precisar rolar
+   de lado ---------- */
+@media (max-width: 576px) {
+    .services-table {
+        font-size: 0.6rem;
+    }
+
+    .services-table th,
+    .services-table td {
+        padding: 0.3rem 0.2rem;
+        white-space: normal;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
+
+    .services-table .badge {
+        font-size: 0.56rem;
+        padding: 0.25em 0.4em;
+    }
+
+    .services-table td.text-end,
+    .services-table td.text-end > .d-flex {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        text-align: center;
+    }
+
+    .services-table td.text-end .btn {
+        width: 100%;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.58rem;
+    }
+}
+
+/* ---------- Notificações estilo iPhone (mensagens do sistema) ----------
+   Cartão translúcido com desfoque no topo da tela, que desce, fica alguns
+   segundos e sobe de volta - substitui os alertas verdes do Bootstrap. */
+.ios-toasts {
+    position: fixed;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    width: min(92vw, 24rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.ios-toast {
+    pointer-events: auto;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 1.15rem;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: 0 0.6rem 1.75rem rgba(10, 37, 64, 0.22);
+    color: var(--color-blue-dark);
+    animation: ios-toast-in 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+.ios-toast.is-leaving {
+    animation: ios-toast-out 0.4s ease-in both;
+}
+
+@keyframes ios-toast-in {
+    from { opacity: 0; transform: translateY(-130%) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ios-toast-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-130%) scale(0.96); }
+}
+
+.ios-toast-icon {
+    flex: 0 0 auto;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-blue-light), var(--color-blue-dark));
+}
+
+.ios-toast-success .ios-toast-icon {
+    background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold-dark));
+}
+
+.ios-toast-error .ios-toast-icon {
+    background: linear-gradient(135deg, #ff7a7a, #d63c3c);
+}
+
+.ios-toast-warning .ios-toast-icon {
+    background: linear-gradient(135deg, #ffc46b, #e08a12);
+}
+
+.ios-toast-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.ios-toast-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.ios-toast-text {
+    font-size: 0.85rem;
+    color: rgba(10, 37, 64, 0.8);
+}
+
+.ios-toast-time {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    color: rgba(10, 37, 64, 0.5);
+}
+
+/* ---------- Pedido de visita: urgente, turno, fotos, GPS ---------- */
+.urgent-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    margin-bottom: 1.25rem;
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-radius: 0.9rem;
+    border: 2px dashed rgba(214, 60, 60, 0.45);
+    background: #fff;
+    color: var(--color-blue-dark);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.urgent-toggle small {
+    display: block;
+    color: #6c757d;
+}
+
+.urgent-toggle-icon {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffe3e3;
+    font-size: 1.2rem;
+}
+
+.urgent-toggle.is-on {
+    border-style: solid;
+    border-color: #d63c3c;
+    background: #fff1f1;
+}
+
+.urgent-toggle.is-on .urgent-toggle-icon {
+    background: #d63c3c;
+}
+
+.request-step {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-blue-dark);
+    margin: 1.5rem 0 0.75rem;
+}
+
+.turno-chips {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.turno-chip {
+    position: relative;
+    cursor: pointer;
+}
+
+.turno-chip input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    cursor: pointer;
+}
+
+.turno-chip span {
+    display: block;
+    text-align: center;
+    padding: 0.7rem 0.4rem;
+    border-radius: 0.8rem;
+    border: 1px solid rgba(20, 49, 92, 0.2);
+    background: #fff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-blue-dark);
+}
+
+.turno-chip input:checked + span {
+    background: var(--color-blue);
+    border-color: var(--color-blue);
+    color: #fff;
+}
+
+.turno-chip input:focus-visible + span {
+    outline: 3px solid var(--color-gold);
+}
+
+.attach-drop {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    border: 2px dashed rgba(20, 49, 92, 0.3);
+    background: #fff;
+    cursor: pointer;
+}
+
+.attach-drop small {
+    display: block;
+    color: #6c757d;
+}
+
+.attach-drop-icon {
+    font-size: 1.6rem;
+}
+
+#id_anexos {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.attach-previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+
+.attach-item {
+    position: relative;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 0.7rem;
+    overflow: hidden;
+    background: #e9ecef;
+}
+
+.attach-item img,
+.attach-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.attach-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    border-radius: 50%;
+    background: rgba(10, 37, 64, 0.8);
+    color: #fff;
+    line-height: 1;
+}
+
+.gps-status {
+    margin-top: 0.4rem;
+    color: #6c757d;
+}
+
+.multi-pro-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.multi-pro-list li {
+    display: flex;
+    flex-direction: column;
+    padding: 0.55rem 0.85rem;
+    border-radius: 0.7rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.12);
+    font-size: 0.9rem;
+}
+
+/* ---------- Pedir para vários (lista de serviços) ---------- */
+.multi-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-blue);
+    cursor: pointer;
+}
+
+.multi-select input {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.multi-bar {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 1rem;
+    background: rgba(10, 37, 64, 0.94);
+    color: #fff;
+    box-shadow: 0 0.6rem 1.5rem rgba(10, 37, 64, 0.35);
+    font-size: 0.9rem;
+}
+
+.multi-bar[hidden] {
+    display: none;
+}
+
+/* ---------- Comparar respostas ---------- */
+.compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1rem;
+}
+
+.compare-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.14);
+}
+
+.compare-card.compare-confirmado {
+    border-color: var(--color-gold);
+    box-shadow: 0 0.4rem 1rem rgba(212, 175, 55, 0.25);
+}
+
+.compare-card.compare-cancelado {
+    opacity: 0.55;
+}
+
+.compare-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.compare-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.compare-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-blue);
+    color: #fff;
+    font-weight: 700;
+}
+
+.compare-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: #e9ecef;
+    color: #495057;
+}
+
+.compare-status-confirmado {
+    background: var(--color-gold-light);
+    color: var(--color-blue-dark);
+}
+
+.compare-facts {
+    margin: 0;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.88rem;
+}
+
+.compare-facts div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.compare-facts dt {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.compare-facts dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+}
+
+.compare-actions {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+/* ---------- Detalhes do pedido (profissional / chat / listas) ---------- */
+.request-meta {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.15rem;
+}
+
+.request-compare-link {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.request-urgent-row > td {
+    background-color: #fff1f1 !important;
+}
+
+.request-details-row > td {
+    background-color: #fbfaf5 !important;
+    padding: 0.6rem 0.75rem !important;
+}
+
+.request-details {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    align-items: center;
+    justify-content: space-evenly;
+    text-align: center;
+}
+
+.request-details-text {
+    font-style: italic;
+}
+
+.request-details-line {
+    font-size: 0.88rem;
+}
+
+.request-media {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.request-media-item {
+    position: relative;
+    display: block;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    background: #e9ecef;
+}
+
+.request-media-item img,
+.request-media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.request-media-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(10, 37, 64, 0.35);
+    font-size: 1.3rem;
+}
+
+.chat-request-info {
+    padding: 0.5rem 1rem;
+    background: #fbfaf5;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+    font-size: 0.88rem;
+}
+
+.chat-request-info summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--color-blue);
+}
+
+.chat-request-info .request-details {
+    margin-top: 0.5rem;
+}
+
+.request-optional {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.request-date-cell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* ---------- Sino de notificações (navbar) ---------- */
+.sino-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #eae6da;
+}
+
+.sino-btn:hover,
+.sino-btn[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--color-gold-light);
+}
+
+.sino-badge {
+    position: absolute;
+    top: 0;
+    right: -0.15rem;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    line-height: 1;
+}
+
+.sino-menu {
+    width: min(94vw, 24rem);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0;
+    border-radius: 1rem;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    box-shadow: 0 1rem 2.5rem rgba(10, 37, 64, 0.25);
+}
+
+@media (max-width: 991px) {
+    .sino .dropdown-menu {
+        position: fixed !important;
+        top: 3.6rem !important;
+        left: 3vw !important;
+        right: 3vw !important;
+        width: auto;
+        transform: none !important;
+    }
+}
+
+.sino-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+    position: sticky;
+    top: 0;
+    background: #fff;
+}
+
+.sino-link {
+    border: none;
+    background: none;
+    color: var(--color-blue);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.sino-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.07);
+    color: var(--color-blue-dark);
+    text-decoration: none;
+    font-size: 0.88rem;
+}
+
+a.sino-item:hover {
+    background: #f7f5ef;
+    color: var(--color-blue-dark);
+}
+
+.sino-item-acao {
+    flex-direction: column;
+    align-items: stretch;
+    background: #fffdf5;
+}
+
+.sino-item-texto small {
+    display: block;
+    color: #6c757d;
+}
+
+.sino-acoes {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sino-acoes form {
+    flex: 1;
+}
+
+.sino-acoes .btn {
+    width: 100%;
+}
+
+.sino-tempo {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    color: #8a8f98;
+}
+
+.sino-vazio {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: #8a8f98;
+    font-size: 0.9rem;
+}
+
+/* ---------- Notificação com botões (novo pedido) ---------- */
+.ios-toast-action {
+    align-items: flex-start;
+}
+
+.ios-toast-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.ios-toast-buttons form {
+    flex: 1;
+}
+
+.ios-toast-buttons .btn {
+    width: 100%;
+}
+
+/* ---------- Regras (cancelar / reagendar) ---------- */
+.rule-box {
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    border-left: 4px solid var(--color-blue);
+}
+
+.rule-box-warning {
+    border-left-color: #d63c3c;
+    background: #fff7f7;
+}
+
+/* "Ao aprovar, as visitas previstas entram na sua agenda automaticamente."
+   cabe em duas linhas no celular. */
+@media (max-width: 576px) {
+    .rule-box-approve-hint {
+        font-size: 0.84rem;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+    }
+}
+
+.rule-list {
+    padding-left: 1.1rem;
+    font-size: 0.88rem;
+    color: #495057;
+}
+
+.turno-chip-wide span {
+    text-align: left;
+    padding-left: 0.9rem;
+}
+
+.reagendar-visitas {
+    display: grid;
+    gap: 0.5rem;
+}
+
+/* ---------- Orçamento: status, agenda e Pix ---------- */
+.budget-status {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.request-meta .budget-status {
+    margin-top: 0;
+    background: #e9ecef;
+    color: #495057;
+}
+
+.budget-status-aprovado {
+    background: var(--color-gold);
+    color: var(--color-blue-dark);
+}
+
+.request-meta .budget-status-aprovado {
+    background: var(--color-gold-light);
+}
+
+.budget-status-recusado {
+    background: #d63c3c;
+    color: #fff;
+}
+
+.agenda-box {
+    text-align: center;
+}
+
+.agenda-box,
+.pay-box {
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+}
+
+.pay-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+}
+
+.agenda-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.agenda-list li {
+    padding: 0.3rem 0;
+    border-bottom: 1px dashed rgba(20, 49, 92, 0.15);
+}
+
+.pay-status {
+    padding: 0.6rem 1rem;
+    border-radius: 0.8rem;
+    text-align: center;
+    font-weight: 700;
+    background: #e9ecef;
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.pay-status-retido,
+.pay-status-liberado {
+    background: var(--color-gold-light);
+    color: var(--color-blue-dark);
+}
+
+.pay-status-reembolsado,
+.pay-status-expirado {
+    background: #ffe3e3;
+    color: #a12a2a;
+}
+
+.pay-qr {
+    display: block;
+    width: 12rem;
+    height: 12rem;
+    margin: 0 auto 1rem;
+    border-radius: 0.8rem;
+}
+
+.pay-qr-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    background: #f1f3f5;
+    border: 2px dashed rgba(20, 49, 92, 0.25);
+    color: #6c757d;
+    font-weight: 700;
+    padding: 0.5rem;
+}
+
+/* ---------- Chat: ações da visita, propostas, foto, áudio, lido ---------- */
+.chat-visit-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.1);
+}
+
+.chat-visit-bar:empty {
+    display: none;
+}
+
+.chat-oncoming {
+    padding: 0.25rem 0.8rem;
+    border-radius: 999px;
+    background: var(--color-gold-light);
+    color: var(--color-blue-dark);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.chat-proposal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #fff7dc;
+    border-bottom: 1px solid var(--color-gold);
+    font-size: 0.86rem;
+}
+
+.chat-proposal-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chat-photo {
+    display: block;
+    max-width: 100%;
+    max-height: 16rem;
+    border-radius: 0.7rem;
+    margin-bottom: 0.3rem;
+}
+
+.chat-audio {
+    display: block;
+    width: 15rem;
+    max-width: 100%;
+    height: 2.4rem;
+    margin-bottom: 0.25rem;
+}
+
+.chat-ticks {
+    margin-left: 0.15rem;
+    letter-spacing: -0.15em;
+    opacity: 0.8;
+}
+
+.chat-ticks.is-read {
+    color: var(--color-gold-light);
+    opacity: 1;
+}
+
+.chat-bubble.is-theirs .chat-ticks.is-read {
+    color: var(--color-blue-light);
+}
+
+.chat-composer {
+    background: #fff;
+    border-top: 1px solid rgba(20, 49, 92, 0.1);
+}
+
+.chat-composer .chat-input-bar {
+    border-top: none;
+}
+
+.chat-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.chat-tool {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-blue);
+    cursor: pointer;
+}
+
+.chat-tool:hover {
+    background: rgba(20, 49, 92, 0.08);
+}
+
+.chat-tool.is-recording {
+    background: #d63c3c;
+    color: #fff;
+    animation: chat-rec-pulse 1s ease-in-out infinite;
+}
+
+@keyframes chat-rec-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+}
+
+.chat-attach-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.5rem 1rem 0;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.8rem;
+    background: #f1f3f5;
+    font-size: 0.85rem;
+}
+
+.chat-attach-preview[hidden],
+.chat-rec-hint[hidden] {
+    display: none;
+}
+
+.chat-attach-preview audio {
+    flex: 1;
+    min-width: 0;
+    height: 2rem;
+}
+
+.chat-attach-x {
+    margin-left: auto;
+    border: none;
+    background: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #6c757d;
+}
+
+.chat-rec-hint {
+    padding: 0 1rem 0.6rem;
+    font-size: 0.8rem;
+    color: #d63c3c;
+    font-weight: 600;
+}
+
+/* =========================================================
+   CELULAR: barra fixa embaixo, botões grandes, carregando
+   ========================================================= */
+:root {
+    --bottom-nav-h: 0px;
+}
+
+.bottom-nav {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    body.has-bottom-nav {
+        --bottom-nav-h: calc(3.7rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: var(--bottom-nav-h);
+    }
+
+    .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1400;
+        display: flex;
+        justify-content: space-around;
+        align-items: stretch;
+        height: var(--bottom-nav-h);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: var(--color-blue-dark);
+        border-top: 2px solid var(--color-gold);
+        box-shadow: 0 -0.4rem 1.2rem rgba(10, 37, 64, 0.25);
+    }
+
+    .bottom-nav-item {
+        position: relative;
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        color: #b9c2d3;
+        text-decoration: none;
+        font-size: 0.66rem;
+        font-weight: 600;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.15s ease;
+    }
+
+    .bottom-nav-item span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .bottom-nav-item svg {
+        width: 1.45rem;
+        height: 1.45rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .bottom-nav-item:active {
+        transform: scale(0.94);
+    }
+
+    .bottom-nav-item.is-active {
+        color: var(--color-gold);
+    }
+
+    .bottom-nav-item.is-active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 2rem;
+        height: 3px;
+        border-radius: 0 0 3px 3px;
+        background: var(--color-gold);
+    }
+
+    .bottom-nav-badge {
+        position: absolute;
+        top: 0.35rem;
+        left: calc(50% + 0.35rem);
+        min-width: 1.05rem;
+        height: 1.05rem;
+        padding: 0 0.28rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #dc3545;
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .bottom-nav-badge[hidden] {
+        display: none;
+    }
+
+    .bottom-nav-avatar {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid currentColor;
+    }
+
+    /* Outras faixas fixas sobem para não ficarem atrás da barra */
+    .multi-bar {
+        bottom: calc(var(--bottom-nav-h) + 0.6rem);
+    }
+
+    body.has-bottom-nav .blob-stage {
+        min-height: calc(100vh - var(--bottom-nav-h));
+        min-height: calc(100dvh - var(--bottom-nav-h));
+    }
+
+    body.has-bottom-nav .chat-app {
+        height: calc(100vh - 90px - var(--bottom-nav-h));
+        height: calc(100dvh - 90px - var(--bottom-nav-h));
+    }
+}
+
+/* ---------- Botões e campos maiores para o polegar ---------- */
+@media (max-width: 767.98px) {
+    .btn {
+        min-height: 2.9rem;
+        padding: 0.6rem 1.1rem;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        min-height: 2.5rem;
+        padding: 0.4rem 0.9rem;
+        font-size: 0.92rem;
+    }
+
+    .btn-lg {
+        min-height: 3.3rem;
+    }
+
+    /* As tabelas compactas continuam compactas (pedido anterior). */
+    .services-table .btn {
+        min-height: 0;
+        display: inline-block;
+    }
+
+    .form-control,
+    .form-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px; /* evita o zoom automático do iPhone ao focar */
+    }
+
+    .form-control,
+    .form-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select {
+        min-height: 2.9rem;
+    }
+
+    .category-chip {
+        padding: 0.55rem 1rem;
+        font-size: 0.92rem;
+    }
+
+    .navbar-toggler {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .sino-btn {
+        width: 2.9rem;
+        height: 2.9rem;
+    }
+
+    .chat-tool {
+        width: 2.9rem;
+        height: 2.9rem;
+    }
+
+    .btn-send {
+        width: 2.9rem;
+        height: 2.9rem;
+    }
+
+    .visit-calendar-day {
+        min-height: 2.6rem;
+    }
+}
+
+/* ---------- Animação de carregando ---------- */
+.btn.is-loading,
+button.is-loading {
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.btn.is-loading::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-left: 0.55rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ifix-spin 0.7s linear infinite;
+}
+
+@keyframes ifix-spin {
+    to { transform: rotate(360deg); }
+}
+
+#page-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3000;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+    box-shadow: 0 0 8px var(--color-gold);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#page-progress.is-running {
+    opacity: 1;
+    animation: ifix-progress 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes ifix-progress {
+    0% { width: 0; }
+    20% { width: 45%; }
+    60% { width: 78%; }
+    100% { width: 92%; }
+}
+
+/* ---------- Chat em tempo real ---------- */
+.chat-new-chip {
+    align-self: center;
+    margin: -2.6rem auto 0.5rem;
+    position: relative;
+    z-index: 5;
+    padding: 0.35rem 0.9rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-blue);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    box-shadow: 0 0.3rem 0.8rem rgba(10, 37, 64, 0.3);
+}
+
+.chat-new-chip[hidden] {
+    display: none;
+}
+
+.chat-send-error {
+    margin: 0.4rem 1rem 0;
+    padding: 0.4rem 0.7rem;
+    border-radius: 0.6rem;
+    background: #ffe3e3;
+    color: #a12a2a;
+    font-size: 0.85rem;
+}
+
+.chat-send-error[hidden] {
+    display: none;
+}
+
+/* ---------- Favoritos ---------- */
+.favorito-form {
+    align-self: flex-end;
+    margin-bottom: 0.4rem;
+}
+
+.favorito-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    background: #fff;
+    color: #adb5bd;
+    border-radius: 999px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.favorito-btn svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.favorito-btn.is-favorito {
+    color: #d63c3c;
+    border-color: rgba(214, 60, 60, 0.35);
+    background: #fff5f5;
+}
+
+.favorito-btn.is-favorito svg {
+    fill: #d63c3c;
+    stroke: #d63c3c;
+}
+
+.favorito-btn-lg {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+/* ---------- Ordenar por (Ver serviços) ---------- */
+.ordenar-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.ordenar-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    border: 1px solid rgba(20, 49, 92, 0.18);
+    background-color: #fff;
+    color: var(--color-blue-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ordenar-chip:hover {
+    border-color: var(--color-blue);
+    color: var(--color-blue);
+}
+
+.ordenar-chip.active {
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+    color: #fff;
+}
+
+.ordenar-chip-limpar {
+    border-style: dashed;
+    color: #6c757d;
+}
+
+/* ---------- Avaliações e resposta do profissional ---------- */
+.review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.review-item {
+    padding: 1rem;
+    border: 1px solid rgba(20, 49, 92, 0.12);
+    border-radius: 0.9rem;
+    background: #fff;
+}
+
+.review-item-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.review-resposta {
+    margin-top: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--color-bg);
+    border-left: 3px solid var(--color-gold);
+    border-radius: 0.6rem;
+}
+
+.review-resposta-foto {
+    display: block;
+    max-width: 10rem;
+    max-height: 10rem;
+    border-radius: 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.review-responder summary {
+    cursor: pointer;
+    color: var(--color-blue);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ---------- "Solicitações recebidas" no celular: banner + cards ---------- */
+.requests-banner {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin: -1.75rem -1.5rem 1.25rem;
+    padding: 1.5rem 1.5rem 1.75rem;
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue) 100%);
+    border-radius: 1.25rem 1.25rem 0.75rem 0.75rem;
+}
+
+.requests-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('img/fundo-decorativo.png');
+    background-size: 200% auto;
+    background-position: right -40px top -60px;
+    background-repeat: no-repeat;
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.requests-banner-icon {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 1.4rem;
+}
+
+.requests-banner-title {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+}
+
+.requests-banner-title span {
+    color: var(--color-gold);
+}
+
+.requests-banner-brand {
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+    flex: 0 0 auto;
+    align-self: center;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.requests-banner-brand:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: var(--color-gold-light);
+}
+
+.blob-stage-brand-inline {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--color-blue-dark);
+    text-decoration: none;
+}
+
+.blob-stage-brand-inline:hover {
+    color: var(--color-blue);
+}
+
+.requests-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.request-card {
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.1);
+    border-radius: 1rem;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 0.3rem 0.9rem rgba(10, 37, 64, 0.08);
+    text-align: center;
+}
+
+.request-card-head,
+.request-card-row {
+    justify-content: center;
+}
+
+.request-card-head {
+    position: relative;
+}
+
+.request-card-head .badge.ms-auto {
+    margin-left: 0 !important;
+    position: absolute;
+    right: 0;
+}
+
+/* "Minhas solicitações": ícone, categoria e status juntos, no centro. */
+.request-card-head-inline .badge {
+    position: static;
+}
+
+/* Mesmo fundo decorativo das telas de solicitações, só no celular, para
+   páginas que usam o layout normal (com menu): "Meus serviços" e
+   "Orçamentos". A imagem sangra até as bordas da tela. */
+@media (max-width: 767.98px) {
+    .mobile-bg-stage {
+        position: relative;
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        padding: 1.25rem 1rem;
+    }
+
+    /* A imagem fica presa à tela inteira (position: fixed, atrás de tudo),
+       então cobre também o espaço em volta do conteúdo - embaixo do menu,
+       depois do fim da página e atrás do rodapé - sem sobrar faixa vazia. */
+    .mobile-bg-stage::before {
+        content: '';
+        position: fixed;
+        inset: -20px;
+        z-index: -1;
+        background-image: url('img/fundo-decorativo.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: blur(6px);
+        pointer-events: none;
+    }
+
+    .mobile-bg-stage > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Painéis "vidro" por cima do fundo, pra texto e filtros ficarem
+       legíveis (o texto solto em cima da imagem perdia contraste). */
+    .mobile-glass {
+        margin-bottom: 0.9rem;
+        padding: 1rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(20, 49, 92, 0.1);
+        border-radius: 1.1rem;
+        box-shadow: 0 0.4rem 1.2rem rgba(10, 37, 64, 0.12);
+    }
+
+    .mobile-glass h1 {
+        font-size: 1.4rem;
+    }
+
+    .mobile-glass > .mb-4 {
+        margin-bottom: 0.9rem !important;
+    }
+
+    .mobile-glass > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .mobile-glass-pill,
+    .mobile-dots-pill {
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0.3rem 0.9rem;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 999px;
+        box-shadow: 0 0.2rem 0.6rem rgba(10, 37, 64, 0.1);
+    }
+
+    .mobile-dots-pill {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.9rem;
+    }
+
+    /* Busca: campo e botão sempre na mesma linha. */
+    .mobile-glass .service-search-bar {
+        flex-wrap: nowrap;
+    }
+
+    .mobile-glass .service-search-input {
+        min-width: 0;
+    }
+
+    .mobile-glass .ordenar-chip,
+    .mobile-glass .category-chip {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* "Visita em dd/mm/aaaa · N profissionais consultados" numa linha só no celular. */
+@media (max-width: 576px) {
+    .compare-summary {
+        white-space: nowrap;
+        font-size: 0.82rem;
+    }
+}
+
+/* Tabela (computador): Conversar, Cancelar e Comparar respostas lado a lado. */
+.request-table-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+
+.request-table-actions .btn {
+    white-space: nowrap;
+}
+
+/* Botões "Cancelar" e "Comparar respostas" lado a lado, na mesma linha. */
+.request-card-btn-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.request-card-btn-row .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.badge-verde {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.request-card.is-urgent {
+    border-color: rgba(214, 60, 60, 0.35);
+    background: #fffaf9;
+}
+
+.request-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.request-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    background: var(--color-blue-dark);
+    font-size: 1rem;
+}
+
+.request-card-categoria {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-blue-dark);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.request-card-nome {
+    margin: 0 0 0.55rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-blue-dark);
+}
+
+.request-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.request-card-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-blue-dark);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.request-card-chip small {
+    display: block;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+
+.request-card-chip-icon {
+    font-size: 0.85rem;
+}
+
+.request-card-endereco {
+    font-size: 0.82rem;
+    color: #495057;
+    margin-bottom: 0.6rem;
+}
+
+.request-card-detalhes {
+    margin-bottom: 0.6rem;
+}
+
+.request-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.request-card-actions .btn {
+    width: 100%;
+}
+
+/* ---------- "Meus serviços": banner + lista de cards ---------- */
+.services-banner {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+    padding: 1.75rem 2rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, var(--color-blue-dark) 0%, var(--color-blue) 100%);
+    box-shadow: 0 0.75rem 2rem rgba(10, 37, 64, 0.25);
+}
+
+.services-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('img/fundo-decorativo.png');
+    background-size: 130% auto;
+    background-position: right -30px top -50px;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.services-banner-icon {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid var(--color-gold);
+    font-size: 1.9rem;
+}
+
+.services-banner-text {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.services-banner-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+}
+
+.services-banner-title span {
+    color: var(--color-gold);
+}
+
+.services-banner-subtitle {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 576px) {
+    .services-banner {
+        padding: 1.35rem 1.25rem;
+    }
+
+    .services-banner-icon {
+        width: 3.4rem;
+        height: 3.4rem;
+        font-size: 1.5rem;
+    }
+
+    .services-banner-title {
+        font-size: 1.45rem;
+    }
+
+    .services-banner-subtitle {
+        font-size: 0.85rem;
+    }
+}
+
+.service-row-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-row-card {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    padding: 1.1rem 1.25rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 0.3rem 0.9rem rgba(10, 37, 64, 0.06);
+}
+
+.service-row-icon {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    background: var(--color-bg);
+    color: var(--color-blue-dark);
+    font-size: 1.4rem;
+}
+
+.service-row-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.service-row-pill {
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    margin-bottom: 0.4rem;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-blue-dark);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.service-row-title {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-blue-dark);
+    line-height: 1.3;
+}
+
+.service-row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.service-row-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-blue-dark);
+}
+
+.service-row-stat small {
+    display: block;
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 0.72rem;
+}
+
+.service-row-stat-icon {
+    font-size: 0.95rem;
+}
+
+.service-row-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.service-row-actions .btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .service-row-card {
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .service-row-icon {
+        width: 2.9rem;
+        height: 2.9rem;
+        font-size: 1.2rem;
+    }
+
+    .service-row-meta {
+        gap: 0.75rem;
+    }
+
+    /* Cards de "Orçamentos": ícone, nome do serviço, profissional/cliente
+       e cada estatística (Orçamento/Dias de visita/Status) centralizados
+       no celular, em vez de alinhados à esquerda. */
+    .orcamento-row-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .orcamento-row-card .service-row-body {
+        text-align: center;
+    }
+
+    .orcamento-row-card .service-row-meta {
+        justify-content: center;
+    }
+
+    /* flex-basis (não width) evita a linha dos botões "vazar" pra fora do
+       card - com width:100% + margem, ela ficava mais larga que o card e
+       cortava o botão Excluir. */
+    .service-row-actions {
+        flex: 1 0 100%;
+        flex-direction: row;
+        margin-top: 0.7rem;
+    }
+
+    .service-row-actions .btn {
+        flex: 1;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.5rem;
+    }
+}
+
+/* ---------- Mensagens: lista de conversas estilo WhatsApp ---------- */
+.msgs-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #fff;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: 1rem;
+}
+
+.msgs-header {
+    padding: 1rem 1.25rem 1.1rem;
+    color: #fff;
+    background: linear-gradient(160deg, var(--color-blue-dark) 0%, var(--color-blue) 100%);
+    border-radius: 0 0 1.5rem 1.5rem;
+    box-shadow: 0 0.5rem 1.4rem rgba(10, 37, 64, 0.25);
+}
+
+.msgs-brand {
+    color: var(--color-gold);
+    font-weight: 800;
+    font-size: 1.05rem;
+    text-decoration: none;
+}
+
+.msgs-title {
+    margin: 0.35rem 0 0.9rem;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.msgs-tabs {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.msgs-tab {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.msgs-tab.is-active {
+    background: var(--color-gold);
+    color: var(--color-blue-dark);
+}
+
+.msgs-tab-count {
+    display: inline-block;
+    min-width: 1.25rem;
+    padding: 0.05rem 0.4rem;
+    margin-left: 0.2rem;
+    border-radius: 999px;
+    background: var(--color-blue-dark);
+    color: #fff;
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+
+.msgs-tab.is-active .msgs-tab-count {
+    background: var(--color-blue-dark);
+    color: var(--color-gold);
+}
+
+.msgs-body {
+    padding: 0.9rem 1rem 0;
+}
+
+.msgs-search {
+    position: relative;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+.msgs-search svg {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8a8f98;
+    pointer-events: none;
+}
+
+.msgs-search input {
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.55rem 1rem 0.55rem 2.6rem;
+    border: 0;
+    border-radius: 999px;
+    background: #eef1f6;
+    color: var(--color-blue-dark);
+    font-size: 16px;
+}
+
+.msgs-search input:focus {
+    outline: 2px solid var(--color-gold);
+    background: #fff;
+}
+
+.msgs-list .chat-list-item {
+    flex-direction: row;
+    min-width: 0;
+    border-right: none;
+    gap: 0.9rem;
+    padding: 0.85rem 0.25rem;
+    border-left: none;
+    border-bottom: 1px solid rgba(20, 49, 92, 0.07);
+    border-radius: 0.6rem;
+}
+
+.msgs-list .chat-list-item[hidden] {
+    display: none;
+}
+
+.msgs-list .chat-list-item:active {
+    background-color: rgba(20, 49, 92, 0.06);
+}
+
+.msgs-list .chat-list-avatar,
+.msgs-list .chat-list-avatar-placeholder {
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    font-size: 1.2rem;
+}
+
+.msgs-list .chat-list-info {
+    flex: 1;
+    min-width: 0;
+    align-items: stretch;
+    gap: 0.25rem;
+}
+
+.msgs-list .chat-list-name {
+    max-width: none;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+.msgs-list .chat-list-time {
+    display: inline;
+    font-size: 0.75rem;
+}
+
+.msgs-list .chat-list-item.has-unread .chat-list-time {
+    color: var(--color-blue);
+    font-weight: 700;
+}
+
+.msgs-list .chat-list-preview-row {
+    display: flex;
+}
+
+.msgs-list .chat-list-preview {
+    font-size: 0.88rem;
+}
+
+.msgs-list .chat-list-item.has-unread .chat-list-preview {
+    color: var(--color-blue-dark);
+    font-weight: 600;
+}
+
+.msgs-list .chat-list-badge {
+    min-width: 1.4rem;
+    text-align: center;
+    background-color: var(--color-blue);
+    color: #fff;
+    padding: 0.28rem 0.5rem;
+}
+
+.chat-list-ticks {
+    color: #8a8f98;
+    font-size: 0.8rem;
+    letter-spacing: -0.15em;
+}
+
+.chat-list-ticks.is-read {
+    color: var(--color-blue);
+}
+
+.msgs-empty-filter {
+    padding: 1.5rem 0;
+    text-align: center;
+    color: #8a8f98;
+}
+
+@media (max-width: 768px) {
+    /* A troca de conversa agora é feita pela lista (tela Mensagens), então
+       a faixa de avatares no topo do chat não é mais necessária. */
+    .chat-sidebar {
+        display: none;
+    }
+}
+
+/* ---------- Confiança e segurança: selo, cartões, textos legais, cookies ---------- */
+.selo-verificado {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.15rem;
+    color: var(--color-gold);
+    line-height: 1;
+    vertical-align: middle;
+    filter: drop-shadow(0 1px 1px rgba(10, 37, 64, 0.25));
+}
+
+.trust-card {
+    padding: 1rem 1.15rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.12);
+    border-left: 4px solid var(--color-blue);
+    border-radius: 0.9rem;
+}
+
+.trust-card-danger {
+    border-left-color: #d63c3c;
+    background: #fff7f7;
+}
+
+.legal-page h2 {
+    margin: 1.75rem 0 0.6rem;
+    font-size: 1.15rem;
+    color: var(--color-blue-dark);
+}
+
+.legal-page p,
+.legal-page li {
+    line-height: 1.6;
+}
+
+.cookie-banner {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: calc(var(--bottom-nav-h, 0px) + 0.75rem);
+    z-index: 1080;
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.18);
+    border-radius: 1rem;
+    box-shadow: 0 0.6rem 2rem rgba(10, 37, 64, 0.25);
+}
+
+.cookie-banner[hidden] {
+    display: none;
+}
+
+.cookie-banner-text {
+    flex: 1 1 18rem;
+    margin: 0;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.cookie-banner-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.profile-safety-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(20, 49, 92, 0.12);
+}
+
+.public-profile-head {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.public-profile-photo {
+    flex: 0 0 auto;
+    width: 6.5rem;
+    height: 6.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-blue);
+    color: #fff;
+    font-size: 2.6rem;
+    font-weight: 700;
+    border: 3px solid var(--color-gold);
+}
+
+.public-profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.public-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+.public-profile-stat {
+    padding: 0.8rem;
+    text-align: center;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.12);
+    border-radius: 0.9rem;
+}
+
+.public-profile-stat strong {
+    display: block;
+    font-size: 1.05rem;
+    color: var(--color-blue-dark);
+}
+
+.public-profile-stat small {
+    color: #6c757d;
+}
+
+@media (max-width: 576px) {
+    .public-profile-head {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .cookie-banner-actions {
+        width: 100%;
+    }
+
+    .cookie-banner-actions .btn {
+        flex: 1;
+    }
+}
+
+/* Menu ⋮ do chat (ver perfil / denunciar / bloquear) */
+.chat-menu {
+    position: relative;
+    margin-left: auto;
+}
+
+.chat-menu > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.2rem 0.6rem;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--color-blue-dark);
+    border-radius: 0.5rem;
+}
+
+.chat-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.chat-menu-list {
+    position: absolute;
+    right: 0;
+    z-index: 5;
+    min-width: 11rem;
+    margin-top: 0.25rem;
+    padding: 0.35rem;
+    background: #fff;
+    border: 1px solid rgba(20, 49, 92, 0.15);
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(10, 37, 64, 0.2);
+}
+
+.chat-menu-list a,
+.chat-menu-list button {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    color: var(--color-blue-dark);
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+}
+
+.chat-menu-list a:hover,
+.chat-menu-list button:hover {
+    background: rgba(20, 49, 92, 0.07);
+}
+
+.chat-blocked-note {
+    padding: 0.85rem 1.1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #842029;
+    background: #fff5f5;
+    border-top: 1px solid rgba(214, 60, 60, 0.25);
+}
+
+/* Editar perfil: "Excluir minha conta" e "Política de Privacidade" logo abaixo do Salvar. */
+.profile-account-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.6rem;
+}
+
+/* "Ver perfil": avaliações centralizadas no celular. */
+@media (max-width: 576px) {
+    .public-profile-reviews {
+        text-align: center;
+    }
+
+    .public-profile-reviews .review-item-head {
+        justify-content: center;
+    }
+
+    .public-profile-reviews .review-resposta {
+        border-left: 0;
+        border-top: 3px solid var(--color-gold);
+    }
+
+    .public-profile-reviews .review-resposta-foto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* "Ver perfil": estrelas e nota centralizadas no celular. */
+@media (max-width: 576px) {
+    .public-profile-head .professional-rating {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Foto do profissional no card: clicar abre o perfil ("Ver perfil").
+   O anel dourado e o zoom ficam na própria foto (círculo perfeito),
+   então crescem juntos com a imagem. */
+.service-provider-photo-link {
+    display: block;
+    text-decoration: none;
+}
+
+.service-provider-photo-link .service-provider-photo {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.service-provider-photo-link:hover .service-provider-photo,
+.service-provider-photo-link:focus-visible .service-provider-photo {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 3px var(--color-gold);
+}
+
+.service-provider-photo-link:focus-visible {
+    outline: none;
+}
+
+/* Celular (sem "passar o mouse"): o anel dourado fica sempre visível, para
+   mostrar que a foto é tocável, e a foto dá o zoom ao ser tocada. */
+@media (hover: none), (max-width: 768px) {
+    .service-provider-photo-link .service-provider-photo {
+        box-shadow: 0 0 0 3px var(--color-gold);
+    }
+
+    .service-provider-photo-link:active .service-provider-photo {
+        transform: scale(1.1);
+    }
+}
+
+/* Painel da equipe: documento e foto de verificação na página do profissional. */
+.admin-verif-imgs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-verif-imgs figure {
+    margin: 0;
+}
+
+.admin-verif-imgs img {
+    display: block;
+    max-width: 220px;
+    max-height: 220px;
+    border: 1px solid rgba(20, 49, 92, 0.2);
+    border-radius: 0.6rem;
+}
+
+.admin-verif-imgs figcaption {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6c757d;
 }

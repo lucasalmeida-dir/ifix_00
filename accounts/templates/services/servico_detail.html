@@ -1,12 +1,32 @@
 {% extends "base.html" %}
-{% block title %}{{ servico.nome }}{% endblock %}
+{% block title %}{{ seo_titulo }}{% endblock %}
+{% block meta_description %}{{ seo_descricao }}{% endblock %}
+{% block og_title %}{{ seo_titulo }}{% endblock %}
+{% block og_description %}{{ seo_descricao }}{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-7">
-        <div class="service-category-rating mb-2">
+        <div class="service-category-rating mb-2 d-flex justify-content-between align-items-start">
             <span class="badge text-bg-info">{{ servico.categoria.nome }}</span>
+            {% if user.is_authenticated and user.profile.is_usuario %}
+                <form method="post" action="{% url 'services:favorito_toggle' servico.pk %}" class="favorito-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="favorito-btn favorito-btn-lg {% if eh_favorito %}is-favorito{% endif %}" aria-label="Favoritar">
+                        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 21s-7.5-4.7-10-9C.3 8.5 2 4.5 6 4.5c2 0 3.5 1 4.5 2.5.9 0.9 1.5 0.9 2.5 0C13.5 5.5 15 4.5 17 4.5c4 0 5.7 4 4 7.5-2.5 4.3-10 9-10 9z"/></svg>
+                        {% if eh_favorito %}Favoritado{% else %}Favoritar{% endif %}
+                    </button>
+                </form>
+            {% endif %}
         </div>
-        <h2>{{ servico.nome }}</h2>
+        <nav aria-label="breadcrumb" class="small text-muted mb-2">
+            <a class="text-muted" href="{% url 'services:servico_list' %}">Serviços</a> &rsaquo;
+            <a class="text-muted" href="{{ servico.categoria.get_absolute_url }}">{{ servico.categoria.nome }}</a>
+        </nav>
+        <h1 class="h2">{{ servico.nome }}{% if servico.subservico %} &middot; {{ servico.subservico }}{% endif %}</h1>
+        <p class="text-muted mb-2">com <strong>{{ nome_profissional }}</strong> {% if servico.profissional.profile.verificado %}{% include "_selo_verificado.html" %}{% endif %}{% if servico.profissional.profile.cidade %} &middot; {{ servico.profissional.profile.cidade }}{% if servico.profissional.profile.uf %}/{{ servico.profissional.profile.uf }}{% endif %}{% endif %}</p>
+        {% if servico.profissional.profile.site_url %}<p class="mb-2"><a href="{{ servico.profissional.profile.site_url }}" target="_blank" rel="noopener noreferrer nofollow ugc" class="btn btn-outline-primary btn-sm">🔗 Ver a página do profissional</a></p>{% endif %}
+        {% include "_painel_verificacao.html" with perfil_verif=servico.profissional.profile %}
         <div class="professional-info mb-3">
             <div class="professional-rating" aria-label="Avaliação do profissional">
                 {% if servico.total_avaliacoes %}
@@ -21,7 +41,7 @@
         <div class="row mb-4">
             <div class="col-6">
                 <div class="p-3 border rounded text-center">
-                    <div class="text-muted small">Preço estimado</div>
+                    <div class="text-muted small">Preço da visita(aproximadamente):</div>
                     <div class="fs-4 fw-bold">{{ servico.faixa_preco }}</div>
                 </div>
             </div>
@@ -38,11 +58,48 @@
         {% endif %}
 
         {% if user.is_authenticated and user.profile.is_usuario %}
-            <a href="{% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary btn-lg">Solicitar este serviço</a>
+            <a href="{% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary btn-lg">Solicitar visita</a>
         {% elif not user.is_authenticated %}
-            <a href="{% url 'accounts:login' %}?next={% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary btn-lg">Entrar para solicitar</a>
+            <a href="{% url 'accounts:login' %}?next={% url 'services:servico_solicitar' servico.pk %}" class="btn btn-primary btn-lg">Entrar para solicitar visita</a>
         {% endif %}
         <a href="{% url 'services:servico_list' %}" class="btn btn-outline-secondary btn-lg">Voltar</a>
+
+        {% if avaliacoes %}
+            <h2 class="h5 mt-5 mb-3">Avaliações de clientes</h2>
+            <div class="review-list">
+                {% for avaliacao in avaliacoes %}
+                    <div class="review-item">
+                        <div class="review-item-head">
+                            <span class="rating-stars">{{ avaliacao.get_estrelas_display }}</span>
+                            <strong>{{ avaliacao.usuario.get_full_name|default:avaliacao.usuario.username }}</strong>
+                            <span class="text-muted small">{{ avaliacao.criado_em|date:"d/m/Y" }}</span>
+                        </div>
+                        {% if avaliacao.comentario %}<p class="mb-2">{{ avaliacao.comentario }}</p>{% endif %}
+
+                        {% if avaliacao.respondida %}
+                            <div class="review-resposta">
+                                <strong>Resposta de {{ nome_profissional }}</strong>
+                                {% if avaliacao.resposta_profissional %}<p class="mb-2">{{ avaliacao.resposta_profissional }}</p>{% endif %}
+                                {% if avaliacao.foto_resposta %}
+                                    <a href="{{ avaliacao.foto_resposta.url }}" target="_blank" rel="noopener"><img class="review-resposta-foto" loading="lazy" src="{{ avaliacao.foto_resposta.url }}" alt="Foto do serviço concluído"></a>
+                                {% endif %}
+                            </div>
+                        {% elif user == servico.profissional %}
+                            <details class="review-responder">
+                                <summary>Responder esta avaliação</summary>
+                                <form method="post" action="{% url 'services:avaliacao_responder' avaliacao.pk %}" enctype="multipart/form-data" class="mt-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <textarea name="resposta_profissional" class="form-control mb-2" rows="2" maxlength="1000" placeholder="Escreva sua resposta..."></textarea>
+                                    <input type="file" name="foto_resposta" accept="image/*" class="form-control form-control-sm mb-2">
+                                    <button type="submit" class="btn btn-sm btn-primary">Enviar resposta</button>
+                                </form>
+                            </details>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

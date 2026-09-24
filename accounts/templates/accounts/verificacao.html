@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Verificação de identidade{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <h2 class="mb-1">Selo de profissional verificado</h2>
+        <p class="text-muted">Profissionais verificados passam mais confiança e são mais escolhidos pelos clientes.</p>
+
+        <div class="trust-card mb-4">
+            {% if profile.verificacao_status == 'verificado' %}
+                <p class="mb-1 fw-bold">{% include "_selo_verificado.html" %} Profissional verificado</p>
+                <p class="mb-0">Sua identidade foi conferida pela equipe do IFIX{% if profile.verificado_em %} em {{ profile.verificado_em|date:"d/m/Y" }}{% endif %}. O selo aparece no seu perfil e nos seus serviços.</p>
+            {% elif profile.verificacao_status == 'pendente' %}
+                <p class="mb-1"><span class="badge text-bg-warning">Aguardando análise</span></p>
+                <p class="mb-0">Recebemos seus documentos{% if profile.verificacao_enviada_em %} em {{ profile.verificacao_enviada_em|date:"d/m/Y H:i" }}{% endif %}. A equipe do IFIX vai conferir e você será avisado(a) pelo sino de notificações.</p>
+            {% elif profile.verificacao_status == 'recusado' %}
+                <p class="mb-1"><span class="badge text-bg-danger">Não aprovado</span></p>
+                <p class="mb-0">{% if profile.verificacao_motivo_recusa %}Motivo: {{ profile.verificacao_motivo_recusa }}{% else %}Não foi possível confirmar sua identidade com os arquivos enviados.{% endif %} Você pode enviar novamente abaixo.</p>
+            {% else %}
+                <p class="mb-0">Você ainda não enviou seus documentos. Envie abaixo para pedir o selo.</p>
+            {% endif %}
+        </div>
+
+        {% if pode_enviar %}
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.documento.id_for_label }}">{{ form.documento.label }}</label>
+                    {{ form.documento.errors }}
+                    <input type="file" name="documento" id="{{ form.documento.id_for_label }}" class="form-control" accept="image/*,application/pdf" required>
+                    <div class="form-text">{{ form.documento.help_text }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.foto_verificacao.id_for_label }}">{{ form.foto_verificacao.label }}</label>
+                    {{ form.foto_verificacao.errors }}
+                    <input type="file" name="foto_verificacao" id="{{ form.foto_verificacao.id_for_label }}" class="form-control" accept="image/*" required>
+                    <div class="form-text">{{ form.foto_verificacao.help_text }}</div>
+                </div>
+                <p class="small text-muted">
+                    🔒 Seus arquivos ficam guardados em área privada, sem endereço público, e só a equipe do IFIX
+                    autorizada os vê, apenas para conferir sua identidade. Veja a
+                    <a href="{% url 'privacidade' %}">Política de Privacidade</a>.
+                </p>
+                <button type="submit" class="btn btn-primary w-100">Enviar para análise</button>
+            </form>
+        {% endif %}
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-secondary w-100 mt-3">Voltar ao perfil</a>
+    </div>
+</div>
+{% endblock %}

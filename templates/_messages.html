@@ -1,0 +1,30 @@
+{% if messages or toast_pedidos %}
+<div class="ios-toasts" aria-live="polite">
+    {% for p in toast_pedidos %}
+        <div class="ios-toast ios-toast-action ios-toast-info" role="alert">
+            <span class="ios-toast-icon" aria-hidden="true">{% if p.urgente %}⚡{% else %}i{% endif %}</span>
+            <span class="ios-toast-body">
+                <strong class="ios-toast-title">{% if p.urgente %}Pedido URGENTE{% else %}Novo pedido de visita{% endif %}</strong>
+                <span class="ios-toast-text">{{ p.usuario.get_full_name|default:p.usuario.username }} &middot; {{ p.servico.nome }} &middot; {{ p.data_visita|date:"d/m" }} ({{ p.turno_curto }})</span>
+                <span class="ios-toast-buttons">
+                    <form method="post" action="{% url 'services:atualizar_status_solicitacao' p.pk 'aceitar' %}">{% csrf_token %}<button class="btn btn-sm btn-success">Aceitar</button></form>
+                    <form method="post" action="{% url 'services:atualizar_status_solicitacao' p.pk 'recusar' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+                </span>
+            </span>
+            <span class="ios-toast-time">agora</span>
+        </div>
+    {% endfor %}
+    {% for message in messages %}
+        <div class="ios-toast ios-toast-{{ message.level_tag|default:'info' }}" role="status">
+            <span class="ios-toast-icon" aria-hidden="true">
+                {% if message.level_tag == 'success' %}✓{% elif message.level_tag == 'error' or message.level_tag == 'warning' %}!{% else %}i{% endif %}
+            </span>
+            <span class="ios-toast-body">
+                <strong class="ios-toast-title">{% if message.level_tag == 'success' %}Tudo certo{% elif message.level_tag == 'error' %}Ops, algo deu errado{% elif message.level_tag == 'warning' %}Atenção{% else %}IFIX{% endif %}</strong>
+                <span class="ios-toast-text">{{ message }}</span>
+            </span>
+            <span class="ios-toast-time">agora</span>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}

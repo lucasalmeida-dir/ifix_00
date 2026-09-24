@@ -1,15 +1,20 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
 {% block title %}{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
+<div class="blob-stage">
+    <a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="row justify-content-center w-100">
     <div class="col-md-6">
-        <h2 class="mb-1">{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}</h2>
-        <p class="text-muted">Escolha a categoria e o subserviço, e informe a faixa de preço estimada e a duração.</p>
+    <div class="blob-stage-card">
+        <h2 class="mb-2">{% if modo == 'criar' %}Adicionar serviço{% else %}Editar serviço{% endif %}</h2>
+        <p class="text-muted">Escolha a categoria e o subserviço, e informe a faixa de preço da visita e a duração.</p>
         <form method="post">
             {% csrf_token %}
             {{ form.non_field_errors }}
             {% for field in form %}
-                <div class="mb-3{% if field.name == 'preco_min' or field.name == 'preco_max' %} address-detail-field{% endif %}">
+                <div class="mb-3{% if field.name == 'preco_min' or field.name == 'preco_max' %} address-detail-field{% endif %}" id="campo-{{ field.name }}">
                     <label class="form-label">{{ field.label }}</label>
                     {{ field.errors }}
                     <div>{{ field }}</div>
@@ -19,27 +24,37 @@
             <button type="submit" class="btn btn-success w-100">Salvar serviço</button>
         </form>
     </div>
+    </div>
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var categoriaSelect = document.getElementById('id_categoria');
+        var servicoSelect = document.getElementById('id_servico');
         var subservicoSelect = document.getElementById('id_subservico');
+        var campoServico = document.getElementById('campo-servico');
 
-        if (!categoriaSelect || !subservicoSelect) {
+        if (!categoriaSelect || !servicoSelect || !subservicoSelect) {
             return;
         }
 
-        function slugDaCategoriaSelecionada() {
-            var opcao = categoriaSelect.options[categoriaSelect.selectedIndex];
-            return opcao ? opcao.getAttribute('data-slug') : null;
+        function valorSelecionado(select) {
+            var opcao = select.options[select.selectedIndex];
+            return opcao ? opcao.value : '';
         }
 
-        // Mostra no <select> de Subserviço apenas as opções cujo
-        // data-categoria bate com a categoria escolhida (a opção em
-        // branco fica sempre disponível).
-        function filtrarPorCategoria(select, manterValorAtual) {
-            var slug = slugDaCategoriaSelecionada();
+        function atributoSelecionado(select, atributo) {
+            var opcao = select.options[select.selectedIndex];
+            return opcao ? opcao.getAttribute(atributo) : null;
+        }
+
+        // Mostra/esconde as opções de um <select> conforme uma função de
+        // filtro; a opção em branco fica sempre disponível. Se
+        // `manterValorAtual` for true e o valor de hoje continuar visível
+        // depois do filtro, ele é preservado (usado ao abrir o formulário
+        // de edição); caso contrário o campo volta para "em branco".
+        function filtrarOpcoes(select, pertence, manterValorAtual) {
             var valorAtual = select.value;
 
             Array.prototype.forEach.call(select.options, function (opcao) {
@@ -48,9 +63,9 @@
                     opcao.disabled = false;
                     return;
                 }
-                var pertence = !slug || opcao.getAttribute('data-categoria') === slug;
-                opcao.hidden = !pertence;
-                opcao.disabled = !pertence;
+                var mostra = pertence(opcao);
+                opcao.hidden = !mostra;
+                opcao.disabled = !mostra;
             });
 
             if (manterValorAtual && valorAtual) {
@@ -69,13 +84,66 @@
             select.value = '';
         }
 
+        // "Serviços" só existe pra categorias com grupo no catálogo (hoje,
+        // Elétrica) - quando a categoria escolhida não tem nenhum grupo,
+        // o campo inteiro some e o Subserviço passa a filtrar só pela
+        // categoria, como categorias sem grupo sempre funcionaram.
+        function categoriaTemServicos(slug) {
+            return Array.prototype.some.call(servicoSelect.options, function (opcao) {
+                return opcao.value && opcao.getAttribute('data-categoria') === slug;
+            });
+        }
+
+        function atualizarServicos(manterValorAtual) {
+            var slugCategoria = atributoSelecionado(categoriaSelect, 'data-slug');
+            var temServicos = !!slugCategoria && categoriaTemServicos(slugCategoria);
+
+            if (campoServico) {
+                campoServico.hidden = !temServicos;
+            }
+            if (!temServicos) {
+                servicoSelect.value = '';
+            }
+
+            filtrarOpcoes(servicoSelect, function (opcao) {
+                return !slugCategoria || opcao.getAttribute('data-categoria') === slugCategoria;
+            }, manterValorAtual);
+        }
+
+        function atualizarSubservicos(manterValorAtual) {
+            var slugCategoria = atributoSelecionado(categoriaSelect, 'data-slug');
+            var servicoAtual = valorSelecionado(servicoSelect);
+            var nomeServico = servicoAtual ? servicoSelect.options[servicoSelect.selectedIndex].textContent : null;
+
+            filtrarOpcoes(subservicoSelect, function (opcao) {
+                if (slugCategoria && opcao.getAttribute('data-categoria') !== slugCategoria) {
+                    return false;
+                }
+                var grupoOpcao = opcao.getAttribute('data-servico');
+                if (!grupoOpcao) {
+                    // Subserviço sem grupo (categorias sem "Serviços"): só
+                    // depende da categoria.
+                    return true;
+                }
+                // Subserviço de um grupo: só aparece se o "Serviço"
+                // escolhido for exatamente esse grupo.
+                return !!nomeServico && grupoOpcao === nomeServico;
+            }, manterValorAtual);
+        }
+
         categoriaSelect.addEventListener('change', function () {
-            filtrarPorCategoria(subservicoSelect, false);
+            atualizarServicos(false);
+            atualizarSubservicos(false);
         });
 
-        // Estado inicial: em edição, tenta manter o subserviço já salvo;
-        // em um formulário novo, filtra a partir do zero.
-        filtrarPorCategoria(subservicoSelect, true);
+        servicoSelect.addEventListener('change', function () {
+            atualizarSubservicos(false);
+        });
+
+        // Estado inicial: em edição, tenta manter Serviço/Subserviço já
+        // salvos; em um formulário novo, filtra a partir do zero.
+        atualizarServicos(true);
+        atualizarSubservicos(true);
     });
 </script>
 {% endblock %}

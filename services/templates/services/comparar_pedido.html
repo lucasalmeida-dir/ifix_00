@@ -1,0 +1,82 @@
+{% extends "base_auth.html" %}
+{% block title %}Comparar profissionais{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block content %}
+<div class="blob-stage">
+    <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
+    <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
+    <div class="blob-stage-card w-100" style="max-width: 1140px;">
+    <div class="d-none d-md-flex justify-content-between align-items-center mb-1">
+        <h2 class="mb-0">Compare as respostas</h2>
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'services:minhas_solicitacoes' %}" class="btn btn-outline-secondary btn-sm">Minhas solicitações</a>
+            <a href="{% url 'home' %}" class="blob-stage-brand-inline">🔧 IFIX</a>
+        </div>
+    </div>
+
+    <div class="requests-banner d-md-none">
+        <span class="requests-banner-icon" aria-hidden="true">⚖️</span>
+        <h2 class="requests-banner-title">Comparar<br><span>respostas</span></h2>
+        <a href="{% url 'home' %}" class="requests-banner-brand">🔧 IFIX</a>
+    </div>
+    <div class="text-center d-md-none mb-3">
+        <a href="{% url 'services:minhas_solicitacoes' %}" class="btn btn-outline-secondary btn-sm">← Minhas solicitações</a>
+    </div>
+
+    <p class="text-muted mb-4 compare-summary">
+        Visita em <strong>{{ primeira.data_visita|date:"d/m/Y" }}</strong>
+        {% if primeira.urgente %}<span class="badge text-bg-danger">Urgente</span>{% endif %}
+        &middot; {{ solicitacoes|length }} profissionais consultados
+    </p>
+
+    <div class="compare-grid">
+        {% for sol in solicitacoes %}
+            {% with prof=sol.servico.profissional %}
+            <article class="compare-card compare-{{ sol.status }}">
+                <header class="compare-head">
+                    {% if prof.profile.foto %}
+                        <img class="compare-avatar" loading="lazy" src="{{ prof.profile.foto.url }}" alt="Foto de {{ prof.get_full_name|default:prof.username }}">
+                    {% else %}
+                        <span class="compare-avatar compare-avatar-placeholder">{{ prof.username|first|upper }}</span>
+                    {% endif %}
+                    <div>
+                        <h3 class="h6 mb-0">{{ prof.get_full_name|default:prof.username }}</h3>
+                        <div class="small">
+                            {% if sol.total_avaliacoes %}<span class="rating-stars">{{ sol.avaliacao_estrelas }}</span> {{ sol.avaliacao_media|floatformat:1 }} ({{ sol.total_avaliacoes }}){% else %}<span class="text-muted">Sem avaliações ainda</span>{% endif %}
+                        </div>
+                    </div>
+                    <span class="compare-status compare-status-{{ sol.status }}">
+                        {% if sol.status == 'pendente' %}Aguardando resposta{% elif sol.status == 'confirmado' %}Aceitou{% elif sol.status == 'cancelado' %}Não disponível{% elif sol.status == 'concluido' %}Concluído{% else %}{{ sol.get_status_display }}{% endif %}
+                    </span>
+                </header>
+
+                <dl class="compare-facts">
+                    <div><dt>Serviço</dt><dd>{{ sol.servico.nome }}{% if sol.servico.subservico %} &middot; {{ sol.servico.subservico }}{% endif %}</dd></div>
+                    <div><dt>Preço da visita</dt><dd>{{ sol.servico.faixa_preco }}</dd></div>
+                    <div><dt>Duração</dt><dd>{{ sol.servico.duracao_minutos }} min</dd></div>
+                    {% if sol.distancia_km is not None %}<div><dt>Distância</dt><dd>{{ sol.distancia_km|floatformat:1 }} km</dd></div>{% endif %}
+                    {% if sol.orcamento_obj %}<div><dt>Orçamento</dt><dd><strong>R$ {{ sol.orcamento_obj.valor }}</strong></dd></div>{% endif %}
+                </dl>
+
+                <div class="compare-actions">
+                    {% if sol.status == 'confirmado' %}
+                        <a class="btn btn-outline-primary" href="{% url 'services:conversa_solicitacao' sol.pk %}">Conversar</a>
+                    {% endif %}
+                    {% if sol.orcamento_obj %}
+                        <a class="btn btn-outline-success" href="{% url 'services:orcamento_detalhe' sol.pk %}">Ver orçamento</a>
+                    {% endif %}
+                    {% if sol.pode_escolher %}
+                        <form method="post" action="{% url 'services:escolher_profissional_pedido' sol.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Escolher este profissional</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% endwith %}
+        {% endfor %}
+    </div>
+    <p class="text-muted small mt-3">Ao escolher um profissional, os outros pedidos ainda em aberto são cancelados automaticamente.</p>
+    </div>
+</div>
+{% endblock %}

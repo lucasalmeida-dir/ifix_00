@@ -1,0 +1,58 @@
+<div class="sino-head">
+    <strong>Notificações</strong>
+    {% if sino_notificacoes %}
+        <form method="post" action="{% url 'services:notificacoes_lidas' %}">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ pagina_atual|default:'/' }}">
+            <button type="submit" class="sino-link">Marcar como lidas</button>
+        </form>
+    {% endif %}
+</div>
+
+{% for p in sino_acoes.pedidos %}
+    <div class="sino-item sino-item-acao">
+        <div class="sino-item-texto">
+            {% if p.urgente %}<span class="badge text-bg-danger">Urgente</span> {% endif %}
+            <strong>Novo pedido</strong> de {{ p.usuario.get_full_name|default:p.usuario.username }}
+            <small>{{ p.servico.nome }} &middot; {{ p.data_visita|date:"d/m" }} &middot; {{ p.turno_curto }}</small>
+        </div>
+        <div class="sino-acoes">
+            <form method="post" action="{% url 'services:atualizar_status_solicitacao' p.pk 'aceitar' %}">{% csrf_token %}<button class="btn btn-sm btn-success">Aceitar</button></form>
+            <form method="post" action="{% url 'services:atualizar_status_solicitacao' p.pk 'recusar' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ pagina_atual|default:'/' }}"><button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+        </div>
+    </div>
+{% endfor %}
+
+{% for r in sino_acoes.reagendamentos %}
+    <div class="sino-item sino-item-acao">
+        <div class="sino-item-texto">
+            <strong>Reagendamento:</strong> {{ r.proposto_por.get_full_name|default:r.proposto_por.username }} quer mudar a visita
+            <small>de {{ r.data_anterior|date:"d/m" }} para {{ r.nova_data|date:"d/m" }} ({{ r.turno_novo_curto }})</small>
+        </div>
+        <div class="sino-acoes">
+            <form method="post" action="{% url 'services:responder_reagendamento' r.pk 'aceitar' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ pagina_atual|default:'/' }}"><button class="btn btn-sm btn-success">Aceitar</button></form>
+            <form method="post" action="{% url 'services:responder_reagendamento' r.pk 'recusar' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ pagina_atual|default:'/' }}"><button class="btn btn-sm btn-outline-danger">Recusar</button></form>
+        </div>
+    </div>
+{% endfor %}
+
+{% for o in sino_acoes.orcamentos %}
+    <div class="sino-item sino-item-acao">
+        <div class="sino-item-texto">
+            <strong>Orçamento para aprovar:</strong> R$ {{ o.orcamento.valor }}
+            <small>{{ o.servico.nome }}</small>
+        </div>
+        <div class="sino-acoes">
+            <form method="post" action="{% url 'services:orcamento_responder' o.pk 'aprovar' %}">{% csrf_token %}<button class="btn btn-sm btn-success">Aprovar</button></form>
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'services:orcamento_detalhe' o.pk %}">Ver</a>
+        </div>
+    </div>
+{% endfor %}
+
+{% for n in sino_notificacoes %}
+    <a class="sino-item" href="{% url 'services:notificacao_abrir' n.pk %}">
+        <div class="sino-item-texto"><strong>{{ n.titulo }}</strong>{% if n.texto %}<small>{{ n.texto }}</small>{% endif %}</div>
+        <span class="sino-tempo">{{ n.criada_em|timesince }}</span>
+    </a>
+{% endfor %}
+
+{% if not sino_total %}<div class="sino-vazio">Tudo em dia! Nenhuma notificação nova.</div>{% endif %}

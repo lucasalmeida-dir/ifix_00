@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Termos de Uso para Clientes | IFIX{% endblock %}
+{% block meta_description %}Regras de uso do IFIX para clientes: como funcionam pedidos, orçamentos, pagamentos, cancelamentos, avaliações e responsabilidades.{% endblock %}
+{% block robots %}index,follow{% endblock %}
+{% block content %}
+{# MODELO: os trechos entre [colchetes] precisam ser preenchidos e o texto deve ser revisado por um advogado antes de ir ao ar. #}
+<div class="row justify-content-center">
+    <div class="col-lg-9 legal-page">
+        <h1 class="h2 mb-1">Termos de Uso para Clientes</h1>
+        <p class="text-muted">Versão 1.0 — vigente a partir de [15/09/2026]. Os profissionais aceitam um termo próprio, específico para quem presta serviços.</p>
+
+        <h2>1. Sobre o IFIX</h2>
+        <p>O IFIX, operado por <strong>[RAZÃO SOCIAL COMPLETA]</strong> (CNPJ <strong>[00.000.000/0001-00]</strong>), é uma plataforma de <strong>intermediação</strong>: aproxima você (cliente) de profissionais autônomos de serviços residenciais. <strong>O serviço em si é prestado pelo profissional, que responde pela execução, qualidade e garantia do trabalho.</strong> O IFIX não é empregador nem prestador desses serviços.</p>
+
+        <h2>2. Cadastro</h2>
+        <ul>
+            <li>Você deve ter 18 anos ou mais e informar dados verdadeiros e atualizados (nome, e-mail, telefone, CEP e endereço).</li>
+            <li>Sua senha é pessoal. Você responde pelo que for feito na sua conta; avise-nos se suspeitar de uso indevido.</li>
+            <li>Ao criar a conta você declara ter lido estes Termos e a <a href="{% url 'privacidade' %}">Política de Privacidade</a>.</li>
+        </ul>
+
+        <h2>3. Como funciona</h2>
+        <ol>
+            <li>Você busca e compara profissionais (preço da visita, avaliações, distância, selo de verificado).</li>
+            <li>Solicita uma visita, escolhendo dia e turno; pode pedir a até 5 profissionais e comparar as respostas.</li>
+            <li>O profissional aceita ou recusa. Aceito, vocês combinam os detalhes pelo chat do IFIX.</li>
+            <li>Após a visita, o profissional envia o <strong>orçamento real</strong> (valor e dias de visita). Você aprova ou recusa; nada é cobrado sem a sua aprovação.</li>
+            <li>Concluído o serviço, você pode avaliar o profissional.</li>
+        </ol>
+        <p>O valor exibido em "preço da visita" é uma estimativa da visita técnica; o preço final do serviço é o do orçamento aprovado.</p>
+
+        <h2>4. Pagamentos</h2>
+        <p>Quando o pagamento pelo aplicativo (Pix) estiver habilitado, o valor pode ficar retido até você marcar o serviço como concluído, sendo então repassado ao profissional. Combinações de pagamento feitas <strong>fora</strong> do IFIX são de responsabilidade das partes e não têm a proteção do aplicativo. Nunca pague fora da plataforma por pedido de terceiros que digam ser do IFIX.</p>
+
+        <h2>5. Cancelamentos e reagendamentos</h2>
+        <p>Você pode cancelar ou pedir reagendamento pelo próprio app, seguindo as regras exibidas na tela. Cancelamentos de última hora podem ser sinalizados como tardios e afetar sua reputação na plataforma. Reagendamentos dependem do aceite da outra parte.</p>
+
+        <h2>6. Conduta esperada</h2>
+        <ul>
+            <li>Trate os profissionais com respeito e receba-os no local combinado, no dia e turno acordados.</li>
+            <li>Não use o IFIX para golpes, assédio, spam, conteúdo ilegal ou ofensivo, nem para contratar fora da plataforma para fugir de regras.</li>
+            <li>Avaliações devem descrever sua experiência real, sem ofensas nem informações pessoais de terceiros.</li>
+        </ul>
+
+        <h2>7. Denúncias, bloqueios e verificação</h2>
+        <p>Você pode denunciar e bloquear usuários. A equipe analisa as denúncias e pode advertir, limitar ou encerrar contas. O selo <strong>"Verificado"</strong> indica que a equipe conferiu documento e foto do profissional; <strong>não é garantia de qualidade do serviço</strong> nem certificação profissional.</p>
+
+        <h2>8. Responsabilidade</h2>
+        <p>Empregamos esforços razoáveis para manter a plataforma disponível e segura, mas não garantimos ausência de falhas. Na extensão permitida por lei, o IFIX não responde por danos decorrentes da execução do serviço pelo profissional, sem prejuízo dos seus direitos como consumidor (Lei nº 8.078/1990) e da responsabilidade solidária que a lei venha a impor. Vale o disposto no seu direito de arrependimento nos casos legais.</p>
+
+        <h2>9. Seus dados</h2>
+        <p>Tratamos seus dados conforme a <a href="{% url 'privacidade' %}">Política de Privacidade</a>. Você pode <strong>excluir sua conta</strong> a qualquer momento em Editar perfil.</p>
+
+        <h2>10. Propriedade intelectual</h2>
+        <p>A marca, o layout e o software do IFIX pertencem ao IFIX. Você mantém a titularidade do conteúdo que envia, concedendo ao IFIX licença limitada para exibi-lo dentro da plataforma para prestar o serviço.</p>
+
+        <h2>11. Encerramento</h2>
+        <p>Você pode encerrar a conta quando quiser. O IFIX pode suspender ou encerrar contas que violem estes Termos, com aviso quando possível.</p>
+
+        <h2>12. Alterações, lei e foro</h2>
+        <p>Podemos atualizar estes Termos, avisando por e-mail ou notificação. Aplica-se a lei brasileira; fica eleito o foro do domicílio do consumidor para disputas de consumo e, nos demais casos, o foro de <strong>[cidade/UF]</strong>.</p>
+
+        <p class="text-muted small mt-4">Dúvidas: <strong>[contato@dominio.com.br]</strong>.</p>
+    </div>
+</div>
+{% endblock %}
