@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static ifix_tags %}
 {% block title %}{{ seo_titulo }}{% endblock %}
 {% block meta_description %}{{ seo_descricao }}{% endblock %}
 {% block robots %}{{ seo_robots }}{% endblock %}
@@ -27,10 +27,10 @@
 </form>
 
 <div class="ordenar-chip-row mb-4">
-    <a href="{% querystring ordenar='preco' %}" class="ordenar-chip {% if form.ordenar.value == 'preco' %}active{% endif %}">💰 Menor preço</a>
-    <a href="{% querystring ordenar='distancia' %}" class="ordenar-chip {% if form.ordenar.value == 'distancia' %}active{% endif %}">📍 Mais próximos</a>
-    <a href="{% querystring ordenar='avaliacao' %}" class="ordenar-chip {% if form.ordenar.value == 'avaliacao' %}active{% endif %}">⭐ Melhor avaliados</a>
-    {% if form.ordenar.value %}<a href="{% querystring ordenar=None %}" class="ordenar-chip ordenar-chip-limpar">Limpar ordenação</a>{% endif %}
+    <a href="{% ifix_querystring ordenar='preco' %}" class="ordenar-chip {% if form.ordenar.value == 'preco' %}active{% endif %}">💰 Menor preço</a>
+    <a href="{% ifix_querystring ordenar='distancia' %}" class="ordenar-chip {% if form.ordenar.value == 'distancia' %}active{% endif %}">📍 Mais próximos</a>
+    <a href="{% ifix_querystring ordenar='avaliacao' %}" class="ordenar-chip {% if form.ordenar.value == 'avaliacao' %}active{% endif %}">⭐ Melhor avaliados</a>
+    {% if form.ordenar.value %}<a href="{% ifix_querystring ordenar=None %}" class="ordenar-chip ordenar-chip-limpar">Limpar ordenação</a>{% endif %}
 </div>
 
 <div class="category-chip-row mb-4">

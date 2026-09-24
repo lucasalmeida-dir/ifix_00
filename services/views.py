@@ -740,7 +740,12 @@ def servico_criar_em_lote(request):
                 for sub in itens_do_grupo
                 if sub['nome'] not in ja_cadastrados
             ]
-            Servico.objects.bulk_create(novos_servicos)
+            # Um save() por serviço (e não bulk_create): é o save() que gera o
+            # slug único de cada um (o bulk_create pulava isso e todos ficavam
+            # com slug vazio, quebrando a regra de slug único).
+            with transaction.atomic():
+                for novo in novos_servicos:
+                    novo.save()
 
             pulados = len(itens_do_grupo) - len(novos_servicos)
             if novos_servicos:

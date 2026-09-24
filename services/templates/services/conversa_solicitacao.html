@@ -6,7 +6,7 @@
 <a href="{% url 'home' %}" class="blob-stage-brand">🔧 IFIX</a>
 <span class="stage-blob stage-blob-blue" aria-hidden="true"></span>
 <span class="stage-blob stage-blob-gold" aria-hidden="true"></span>
-<div class="d-flex justify-content-between align-items-center mb-3" style="position: relative; z-index: 1; margin-top: 2.75rem;">
+<div class="d-flex justify-content-between align-items-center mb-3 chat-title-row" style="position: relative; z-index: 1; margin-top: 2.75rem;">
     <h2 class="mb-0">Mensagens</h2>
     <a href="{% if user == solicitacao.servico.profissional %}{% url 'services:solicitacoes_recebidas' %}{% else %}{% url 'services:minhas_solicitacoes' %}{% endif %}" class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex">Voltar</a>
     <a href="{% url 'services:mensagens' %}" class="btn btn-outline-secondary btn-sm d-md-none">← Conversas</a>

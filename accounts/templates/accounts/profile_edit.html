@@ -7,7 +7,7 @@
             {% if profile.is_profissional %}Editar dados profissionais{% else %}Editar perfil{% endif %}
         </h2>
         <p class="text-muted">Conta: {{ profile.get_tipo_display }}</p>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" class="profile-edit-form">
             {% csrf_token %}
             {% for field in form %}
                 {% if field.name == 'foto' %}
